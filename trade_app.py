@@ -1133,7 +1133,7 @@ fig_mini.add_trace(go.Scatter(
 
 # ── Current price dotted line ─────────────────────────────────────────────────
 fig_mini.add_hline(
-    y=price, line_color="#C8A96E44", line_width=1, line_dash="dot",
+    y=price, line_color="rgba(200,169,110,0.27)", line_width=1, line_dash="dot",
     row=1, col=1,
 )
 
