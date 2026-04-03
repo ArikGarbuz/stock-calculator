@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock Calculator — Smart Trading Decisions</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 400:'#C8A96E', 500:'#b8944e', 600:'#a07840', 900:'#3d2c10' },
+            dark:  { 900:'#060610', 800:'#10101e', 700:'#14142a', 600:'#2a2a48' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: #060610; color: #F0ECE6; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .glow  { box-shadow: 0 0 40px rgba(200,169,110,0.15); }
+    .card  { background: #10101e; border: 1px solid #2a2a48; }
+    .gold  { color: #C8A96E; }
+    .go-green { color: #2DD4A0; }
+    .no-red   { color: #E05F5F; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .pulse { animation: pulse-dot 2s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="fixed top-0 w-full z-50 backdrop-blur border-b border-dark-600" style="background:rgba(6,6,16,0.85);">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl">📊</span>
+      <span class="text-xl font-bold text-white">Stock Calculator</span>
+    </div>
+    <div class="hidden md:flex items-center gap-8 text-sm" style="color:#9090B8">
+      <a href="#features" class="hover:text-white transition">Features</a>
+      <a href="#how-it-works" class="hover:text-white transition">How it works</a>
+      <a href="#faq" class="hover:text-white transition">FAQ</a>
+    </div>
+    <a href="https://github.com/ArikGarbuz/stock-calculator"
+       class="text-sm px-4 py-2 rounded-lg font-medium transition"
+       style="background:linear-gradient(135deg,#C8A96E,#a07840);color:#060610;">
+      Get Started →
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="pt-32 pb-20 px-6 text-center">
+  <div class="max-w-4xl mx-auto">
+    <div class="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-full mb-8"
+         style="background:#0b2318;border:1px solid #2DD4A044;color:#2DD4A0;">
+      <span class="w-2 h-2 rounded-full pulse" style="background:#2DD4A0;"></span>
+      NYSE · NASDAQ · TASE — Live market status + After-Hours prices
+    </div>
+    <h1 class="text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
+      Trade smarter.<br/><span class="gold">Not just harder.</span>
+    </h1>
+    <p class="text-xl max-w-2xl mx-auto mb-10" style="color:#9090B8;">
+      Personal trading decision terminal. Live prices, AI news scan, social pulse,
+      and an instant R:R calculator — with a clear
+      <span class="go-green font-bold">GO ✅</span> /
+      <span class="no-red font-bold">NO-GO ❌</span> verdict.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="https://github.com/ArikGarbuz/stock-calculator"
+         class="font-semibold px-8 py-4 rounded-xl text-lg transition glow"
+         style="background:linear-gradient(135deg,#C8A96E,#a07840);color:#060610;">
+        View on GitHub →
+      </a>
+      <a href="#how-it-works"
+         class="border font-semibold px-8 py-4 rounded-xl text-lg transition hover:border-gray-500"
+         style="border-color:#2a2a48;color:#9090B8;">
+        See how it works
+      </a>
+    </div>
+    <p class="mt-8 text-sm" style="color:#38384E;">
+      Open source · Python + Streamlit · 100% local · Free
+    </p>
+  </div>
+
+  <!-- Dashboard mockup -->
+  <div class="max-w-5xl mx-auto mt-16 card rounded-2xl p-1 glow">
+    <div class="rounded-xl p-6" style="background:#14142a;">
+      <div class="flex items-center gap-4 mb-4 p-4 rounded-xl text-left" style="background:#10101e;border:1px solid #2a2a48;">
+        <div class="flex-1">
+          <div class="text-xs mb-1" style="color:#9090B8;">Apple Inc.
+            <span class="ml-2 px-2 py-0.5 rounded text-xs font-bold" style="background:#0b2318;color:#2DD4A0;border:1px solid #2DD4A044;">● OPEN</span>
+          </div>
+          <div class="text-4xl font-black text-white">$255.17</div>
+          <div class="text-sm mt-1 go-green">▲ +1.23 (+0.48%)</div>
+        </div>
+        <div class="text-center px-4">
+          <div class="text-xs mb-1" style="color:#9090B8;">R:R RATIO</div>
+          <div class="text-3xl font-black gold">2.14</div>
+        </div>
+        <div class="text-center px-4">
+          <div class="text-xs mb-1" style="color:#9090B8;">VERDICT</div>
+          <div class="text-2xl font-black go-green">GO ✅</div>
+        </div>
+        <div class="text-center px-4">
+          <div class="text-xs mb-1" style="color:#9090B8;">SENTIMENT</div>
+          <div class="text-2xl font-black gold">+0.67</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-4 gap-3">
+        <div class="rounded-lg p-3 text-left" style="background:#10101e;border:1px solid #2a2a48;">
+          <div class="text-xs mb-1" style="color:#9090B8;">News Sentiment</div>
+          <div class="text-xl font-bold go-green">+0.67</div>
+          <div class="text-xs mt-1" style="color:#6E6E92;">5 headlines</div>
+        </div>
+        <div class="rounded-lg p-3 text-left" style="background:#10101e;border:1px solid #2a2a48;">
+          <div class="text-xs mb-1" style="color:#9090B8;">Social Bullish</div>
+          <div class="text-xl font-bold gold">68%</div>
+          <div class="text-xs mt-1" style="color:#6E6E92;">StockTwits + Reddit</div>
+        </div>
+        <div class="rounded-lg p-3 text-left" style="background:#10101e;border:1px solid #2a2a48;">
+          <div class="text-xs mb-1" style="color:#9090B8;">Position Size</div>
+          <div class="text-xl font-bold text-white">14 shares</div>
+          <div class="text-xs mt-1" style="color:#6E6E92;">$3,572 total</div>
+        </div>
+        <div class="rounded-lg p-3 text-left" style="background:#10101e;border:1px solid #2a2a48;">
+          <div class="text-xs mb-1" style="color:#9090B8;">ATR 14</div>
+          <div class="text-xl font-bold gold">$3.21</div>
+          <div class="text-xs mt-1" style="color:#6E6E92;">Stop: $248.50</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="py-20 px-6">
+  <div class="max-w-6xl mx-auto">
+    <h2 class="text-3xl font-bold text-white text-center mb-4">Everything you need before entering a trade</h2>
+    <p class="text-center mb-14 max-w-xl mx-auto" style="color:#9090B8;">
+      One terminal. Live data, AI scan, R:R calculator, persistent journal — Bloomberg-style dark dashboard.
+    </p>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="card rounded-xl p-6">
+        <div class="text-3xl mb-4">📰</div>
+        <h3 class="text-lg font-semibold text-white mb-2">News Scout</h3>
+        <p class="text-sm" style="color:#9090B8;">5 latest headlines with AI sentiment score (−1 to +1). Know the mood before you click buy.</p>
+      </div>
+      <div class="card rounded-xl p-6" style="border-color:#C8A96E33;">
+        <div class="text-3xl mb-4">📡</div>
+        <h3 class="text-lg font-semibold text-white mb-2">Social Pulse</h3>
+        <p class="text-sm" style="color:#9090B8;">Real-time bullish/bearish % from StockTwits + Reddit. See what retail is doing.</p>
+      </div>
+      <div class="card rounded-xl p-6">
+        <div class="text-3xl mb-4">🧮</div>
+        <h3 class="text-lg font-semibold text-white mb-2">Trade Calculator</h3>
+        <p class="text-sm" style="color:#9090B8;">Entry, target, stop → instant R:R, position size, breakeven, GO / NO-GO. R:R ≥ 2.0 = GO.</p>
+      </div>
+      <div class="card rounded-xl p-6">
+        <div class="text-3xl mb-4">🔖</div>
+        <h3 class="text-lg font-semibold text-white mb-2">Persistent Watchlist</h3>
+        <p class="text-sm" style="color:#9090B8;">Sidebar with live prices. One click loads any stock into the calculator. Saved between sessions.</p>
+      </div>
+      <div class="card rounded-xl p-6">
+        <div class="text-3xl mb-4">📓</div>
+        <h3 class="text-lg font-semibold text-white mb-2">Trade Journal</h3>
+        <p class="text-sm" style="color:#9090B8;">Save every setup. Track GO%, avg R:R, best trade. Know if your edge is real.</p>
+      </div>
+      <div class="card rounded-xl p-6">
+        <div class="text-3xl mb-4">🌙</div>
+        <h3 class="text-lg font-semibold text-white mb-2">After-Hours Prices</h3>
+        <p class="text-sm" style="color:#9090B8;">Market badge: OPEN / PRE-MARKET / AFTER-HOURS / CLOSED with actual extended-hours price shown.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" class="py-20 px-6" style="background:#10101e;">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-3xl font-bold text-white text-center mb-14">The addiction loop</h2>
+    <div class="relative">
+      <div class="absolute left-6 top-0 bottom-0 w-px" style="background:#2a2a48;"></div>
+      <div class="space-y-10">
+        <div class="flex gap-6 items-start">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0 z-10" style="background:#C8A96E;color:#060610;">1</div>
+          <div><h3 class="text-lg font-semibold text-white mb-1">Open watchlist → pick a stock</h3>
+          <p style="color:#9090B8;" class="text-sm">Sidebar shows live prices. Click Load — data loads instantly.</p></div>
+        </div>
+        <div class="flex gap-6 items-start">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0 z-10" style="background:#C8A96E;color:#060610;">2</div>
+          <div><h3 class="text-lg font-semibold text-white mb-1">Scan news & social sentiment</h3>
+          <p style="color:#9090B8;" class="text-sm">One click → AI reads 5 headlines + StockTwits/Reddit → combined score on a gauge.</p></div>
+        </div>
+        <div class="flex gap-6 items-start">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0 z-10" style="background:#C8A96E;color:#060610;">3</div>
+          <div><h3 class="text-lg font-semibold text-white mb-1">Calculate the trade</h3>
+          <p style="color:#9090B8;" class="text-sm">Enter your levels. Get R:R, position size, breakeven and a GO ✅ / NO-GO ❌ banner.</p></div>
+        </div>
+        <div class="flex gap-6 items-start">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0 z-10" style="background:#2DD4A0;color:#060610;">4</div>
+          <div><h3 class="text-lg font-semibold text-white mb-1">Save to journal → repeat</h3>
+          <p style="color:#9090B8;" class="text-sm">One click saves the full setup. Review your history, track your edge, improve.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="py-20 px-6">
+  <div class="max-w-3xl mx-auto">
+    <h2 class="text-3xl font-bold text-white text-center mb-14">FAQ</h2>
+    <div class="space-y-4">
+      <details class="card rounded-xl p-6 cursor-pointer group">
+        <summary class="font-medium text-white flex justify-between items-center">
+          Does it work with Israeli stocks (TASE)?
+          <span class="transition group-open:rotate-180" style="color:#9090B8;">▼</span>
+        </summary>
+        <p class="mt-4 text-sm" style="color:#9090B8;">Yes. Add .TA suffix (e.g., TEVA.TA, NICE.TA). Uses Jerusalem timezone for TASE hours (Sun–Thu 9:59–17:25).</p>
+      </details>
+      <details class="card rounded-xl p-6 cursor-pointer group">
+        <summary class="font-medium text-white flex justify-between items-center">
+          How do I run it?
+          <span class="transition group-open:rotate-180" style="color:#9090B8;">▼</span>
+        </summary>
+        <p class="mt-4 text-sm" style="color:#9090B8;">
+          Clone the repo → <code class="rounded px-1" style="background:#14142a;">pip install -r requirements.txt</code> →
+          add API keys to <code class="rounded px-1" style="background:#14142a;">.env</code> →
+          <code class="rounded px-1" style="background:#14142a;">streamlit run trade_app.py</code>
+        </p>
+      </details>
+      <details class="card rounded-xl p-6 cursor-pointer group">
+        <summary class="font-medium text-white flex justify-between items-center">
+          What API keys do I need?
+          <span class="transition group-open:rotate-180" style="color:#9090B8;">▼</span>
+        </summary>
+        <p class="mt-4 text-sm" style="color:#9090B8;">Marketaux (news, free 100 req/day). Optionally: Finnhub, Reddit PRAW, Brave Search. Market data via Yahoo Finance — no key needed.</p>
+      </details>
+      <details class="card rounded-xl p-6 cursor-pointer group">
+        <summary class="font-medium text-white flex justify-between items-center">
+          Is my data saved anywhere?
+          <span class="transition group-open:rotate-180" style="color:#9090B8;">▼</span>
+        </summary>
+        <p class="mt-4 text-sm" style="color:#9090B8;">100% local. Watchlist and journal saved as JSON files on your machine. Nothing sent to any server.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="py-20 px-6 text-center">
+  <div class="max-w-2xl mx-auto card rounded-2xl p-12 glow">
+    <h2 class="text-3xl font-bold text-white mb-4">Ready to trade smarter?</h2>
+    <p class="mb-8" style="color:#9090B8;">Open source. Self-hosted. Free.</p>
+    <a href="https://github.com/ArikGarbuz/stock-calculator"
+       class="inline-block font-semibold px-10 py-4 rounded-xl text-lg transition"
+       style="background:linear-gradient(135deg,#C8A96E,#a07840);color:#060610;">
+      Clone on GitHub →
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t py-10 px-6" style="border-color:#2a2a48;">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <span>📊</span>
+      <span class="text-white font-semibold">Stock Calculator</span>
+      <span class="text-sm" style="color:#38384E;">— Personal Trading Terminal</span>
+    </div>
+    <div class="flex gap-6 text-sm" style="color:#6E6E92;">
+      <a href="https://github.com/ArikGarbuz/stock-calculator" class="hover:text-gray-300 transition">GitHub</a>
+      <a href="https://github.com/ArikGarbuz/stock-calculator/issues" class="hover:text-gray-300 transition">Issues</a>
+    </div>
+    <div class="text-sm" style="color:#38384E;">© 2026 · Not financial advice.</div>
+  </div>
+</footer>
+
+</body>
+</html>
