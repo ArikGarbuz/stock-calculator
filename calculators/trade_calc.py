@@ -2,6 +2,7 @@
 trade_calc.py — Trade Calculator: חישובי כדאיות עסקה
 כל החישובים מתבצעים כאן בלבד (לא inline בשאר הקוד)
 """
+import math
 import pandas as pd
 import numpy as np
 
@@ -131,6 +132,95 @@ def evaluate_trade(entry: float, target: float, stop_loss: float,
     }
     result["markdown_table"] = _build_markdown_table(result)
     return result
+
+
+def evaluate_trade_v3(
+    ticker: str,
+    direction: str,
+    account_size: float,
+    pct_investing: float,
+    entry: float,
+    stop: float,
+    target: float,
+    commission: float = 7.0,
+) -> dict:
+    """
+    מחשבון מסחר v3: Account Size, % Investing, LONG/SHORT, Income Forecast + Exit Tiers.
+
+    Args:
+        direction:    "LONG" | "SHORT"
+        pct_investing: 0.0–1.0 (e.g. 1.0 = 100%)
+    """
+    planned_investment = account_size * pct_investing
+    shares = math.floor(planned_investment / entry) if entry > 0 else 0
+    if shares < 1:
+        shares = 1
+    actual_investment = shares * entry
+
+    if direction == "LONG":
+        risk_per_share   = entry - stop
+        reward_per_share = target - entry
+    else:  # SHORT
+        risk_per_share   = stop - entry
+        reward_per_share = entry - target
+
+    if risk_per_share <= 0:
+        raise ValueError("Stop Loss אינו תקין ביחס למחיר הכניסה")
+    if reward_per_share <= 0:
+        raise ValueError("Target אינו תקין ביחס למחיר הכניסה")
+
+    rr_ratio         = round(reward_per_share / risk_per_share, 2)
+    total_commission = commission * 2
+    gross_profit     = shares * reward_per_share
+    net_profit       = gross_profit - total_commission
+    risk_total       = shares * risk_per_share
+    profit_pct       = (net_profit / actual_investment * 100) if actual_investment > 0 else 0
+    verdict          = "GO" if rr_ratio >= 2.0 else "NO-GO"
+
+    # Exit tiers: 25% / 50% / 75% / 100% of position
+    exit_tiers = []
+    for tier_pct in [25, 50, 75, 100]:
+        frac        = tier_pct / 100
+        tier_shares = math.floor(shares * frac)
+        if direction == "LONG":
+            tier_price  = round(entry + reward_per_share * frac, 2)
+            tier_profit = round(tier_shares * (tier_price - entry), 2)
+        else:
+            tier_price  = round(entry - reward_per_share * frac, 2)
+            tier_profit = round(tier_shares * (entry - tier_price), 2)
+        tier_pct_return = round(tier_profit / actual_investment * 100, 2) if actual_investment > 0 else 0
+        exit_tiers.append({
+            "pct":        tier_pct,
+            "shares":     tier_shares,
+            "price":      tier_price,
+            "profit":     tier_profit,
+            "pct_return": tier_pct_return,
+        })
+
+    return {
+        "verdict":            verdict,
+        "direction":          direction,
+        "rr":                 rr_ratio,
+        "rr_formatted":       f"1 : {rr_ratio:.2f}",
+        "verdict_reason":     f"R:R = 1:{rr_ratio:.2f} {'≥' if rr_ratio >= 2.0 else '<'} 1:2",
+        "account_size":       round(account_size, 2),
+        "pct_investing":      round(pct_investing * 100, 1),
+        "planned_investment": round(planned_investment, 2),
+        "actual_investment":  round(actual_investment, 2),
+        "shares":             shares,
+        "entry":              entry,
+        "stop":               stop,
+        "target":             target,
+        "risk_per_share":     round(risk_per_share, 4),
+        "reward_per_share":   round(reward_per_share, 4),
+        "risk_total":         round(risk_total, 2),
+        "gross_profit":       round(gross_profit, 2),
+        "net_profit":         round(net_profit, 2),
+        "profit_pct":         round(profit_pct, 2),
+        "commission_total":   round(total_commission, 2),
+        "exit_tiers":         exit_tiers,
+        "ticker":             ticker,
+    }
 
 
 def _build_markdown_table(data: dict) -> str:

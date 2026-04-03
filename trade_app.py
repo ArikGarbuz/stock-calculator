@@ -11,8 +11,9 @@ from plotly.subplots import make_subplots
 from datetime import datetime
 
 from data.market_data import get_current_quote, get_price_history, get_company_name, get_market_status
-from calculators.trade_calc import calc_atr, evaluate_trade
+from calculators.trade_calc import calc_atr, evaluate_trade, evaluate_trade_v3
 from calculators.sentiment_scorer import combine_signals
+from calculators.support_resistance import get_support_resistance
 from agents.trade_calculator import parse_price_from_text, auto_suggest_stop
 from agents.news_scout import get_news
 from agents.social_pulse import get_social_pulse
@@ -516,6 +517,21 @@ st.markdown("""
   }
   .ext-price-val { font-size:16px; font-weight:700; color:#F0ECE6; }
   .ext-price-chg { font-size:12px; font-weight:600; }
+
+  /* ── Ticker search bar — elegant centered ── */
+  div[data-testid="stTextInput"] input[aria-label="Ticker Symbol"] {
+      font-size: 26px !important;
+      font-weight: 700 !important;
+      text-align: center !important;
+      letter-spacing: 0.08em !important;
+      padding: 14px 20px !important;
+      border: 2px solid #2a2a48 !important;
+      border-radius: 14px !important;
+  }
+  div[data-testid="stTextInput"] input[aria-label="Ticker Symbol"]:focus {
+      border-color: #C8A96E !important;
+      box-shadow: 0 0 0 4px #C8A96E18 !important;
+  }
 </style>
 """, unsafe_allow_html=True)
 
@@ -723,17 +739,27 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-col_t, col_go, col_watch = st.columns([4, 1, 1])
-with col_t:
-    ticker_input = st.text_input("Ticker", value=st.session_state["calc_ticker"],
-                                  placeholder="AAPL / TEVA.TA", label_visibility="collapsed")
-with col_go:
-    load_btn = st.button("Load", use_container_width=True, type="primary")
-with col_watch:
+st.markdown(
+    '<div style="text-align:center;margin:4px 0 8px;">'
+    '<span style="font-size:12px;color:#9090B8;letter-spacing:2px;text-transform:uppercase;">'
+    'Enter Stock Symbol</span></div>',
+    unsafe_allow_html=True
+)
+_tc1, _tc2, _tc3 = st.columns([1, 3, 1])
+with _tc2:
+    ticker_input = st.text_input(
+        "Ticker Symbol",
+        value=st.session_state["calc_ticker"],
+        placeholder="🔍   AAPL  /  TEVA.TA",
+        label_visibility="collapsed",
+    )
+_bl1, _bl2, _bl3, _bl4, _bl5 = st.columns([1, 2, 1, 2, 1])
+with _bl2:
+    load_btn = st.button("Load →", use_container_width=True, type="primary")
+with _bl4:
     _in_wl = ticker_input.strip().upper() in st.session_state["watchlist"]
     _wl_label = "✓ Watching" if _in_wl else "+ Watch"
-    _wl_type  = "secondary" if _in_wl else "secondary"
-    if st.button(_wl_label, use_container_width=True, key="toggle_watch", type=_wl_type):
+    if st.button(_wl_label, use_container_width=True, key="toggle_watch"):
         t_upper = ticker_input.strip().upper()
         if t_upper:
             if _in_wl:
@@ -773,6 +799,10 @@ def _load_history_6m(t):
 def _load_market_status(t):
     return get_market_status(t)
 
+@st.cache_data(ttl=300)
+def _load_sr(t):
+    return get_support_resistance(t)
+
 def _fmt_vol(v):
     """פורמט נפח: 1.2M / 450K / 12K"""
     if v >= 1_000_000:
@@ -795,6 +825,7 @@ try:
     df5d    = _load_history(ticker)
     df6m    = _load_history_6m(ticker)
     atr_val = calc_atr(df5d)
+    sr_data = _load_sr(ticker)
     company = get_company_name(ticker)
     mkt     = _load_market_status(ticker)
 except Exception as e:
@@ -1207,48 +1238,47 @@ if st.session_state["agents_ticker"] == ticker and st.session_state["news_data"]
 
 st.markdown("---")
 
-# ─── קלטים ───────────────────────────────────────────────────────────────────
-col_levels, col_risk = st.columns(2, gap="large")
+# ─── מחשבון עסקה v3 ──────────────────────────────────────────────────────────
+st.markdown('<div class="section-label">Trade Calculator</div>', unsafe_allow_html=True)
 
-with col_levels:
-    st.markdown('<div class="section-label">Price Levels</div>', unsafe_allow_html=True)
+_col_a, _col_b, _col_c, _col_d = st.columns([2, 1, 1, 1])
+with _col_a:
+    account_size = st.number_input(f"Account Size ({currency})", value=5000.0, step=500.0, format="%.0f", key="account_size")
+with _col_b:
+    pct_inv_input = st.number_input("% Investing", value=100.0, min_value=1.0, max_value=100.0, step=5.0, format="%.0f", key="pct_inv")
+with _col_c:
+    direction = st.selectbox("Direction", ["LONG", "SHORT"], key="direction")
+with _col_d:
+    commission = st.number_input(f"Commission ({currency})", value=7.0, step=1.0, format="%.0f", key="comm")
 
+_col_e, _col_f, _col_g = st.columns(3)
+with _col_e:
     entry = st.number_input(f"Entry Price ({currency})", value=float(price), step=0.5, format="%.2f", key="entry")
+with _col_f:
+    stop = st.number_input(f"Stop Loss ({currency})", value=float(suggested_stop), step=0.5, format="%.2f", key="stop")
+    st.markdown(f'<div class="hint">מוצע: {currency}{suggested_stop:.2f} (1.5 × ATR)</div>', unsafe_allow_html=True)
+with _col_g:
     default_target = float(agent_target_suggestion) if agent_target_suggestion else round(float(price) * 1.06, 2)
     target = st.number_input(f"Target ({currency})", value=default_target, step=0.5, format="%.2f", key="target")
     if agent_target_suggestion:
-        st.markdown(f'<div class="hint">Target auto-extracted from news by News Scout</div>', unsafe_allow_html=True)
-    stop = st.number_input(f"Stop Loss ({currency})", value=float(suggested_stop), step=0.5, format="%.2f", key="stop")
-    st.markdown(f'<div class="hint">Suggested stop: {currency}{suggested_stop:.2f} (1.5 × ATR)</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="hint">נחלץ מחדשות ע"י News Scout</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="section-label" style="margin-top:14px;">Extract from Text</div>', unsafe_allow_html=True)
-    target_text = st.text_input("Target text", placeholder='"resistance at $270"', key="tt")
-    stop_text   = st.text_input("Stop text",   placeholder='"support at $248"',   key="st_txt")
-    if target_text:
-        pt = parse_price_from_text(target_text)
-        if pt:
-            st.caption(f"Detected target: {currency}{pt} — update the field above")
-    if stop_text:
-        ps = parse_price_from_text(stop_text)
-        if ps:
-            st.caption(f"Detected stop: {currency}{ps} — update the field above")
-
-with col_risk:
-    st.markdown('<div class="section-label">Risk Parameters</div>', unsafe_allow_html=True)
-
-    risk_mode = st.radio("Risk Mode", ["Fixed Amount", "% of Portfolio"], horizontal=True, key="risk_mode")
-    if risk_mode == "Fixed Amount":
-        risk_amount = st.number_input(f"Risk ({currency})", value=100.0, step=10.0, format="%.0f", key="risk_amt")
-        portfolio_value = None
-    else:
-        portfolio_value = st.number_input(f"Portfolio Size ({currency})", value=10000.0, step=500.0, format="%.0f", key="port")
-        risk_pct = st.slider("Risk %", 0.5, 3.0, 1.0, step=0.25, key="rpct")
-        risk_amount = portfolio_value * risk_pct / 100
-        st.markdown(f'<div class="hint">Risk amount = {currency}{risk_amount:.0f}</div>', unsafe_allow_html=True)
-
-    st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
-    commission = st.number_input(f"Commission/side ({currency})", value=5.0, step=1.0, format="%.1f", key="comm")
-    spread_pct = st.number_input("Spread (%)", value=0.10, step=0.05, format="%.2f", key="spread") / 100
+# Preview row
+import math as _math
+_planned = account_size * pct_inv_input / 100
+_shares_preview = _math.floor(_planned / entry) if entry > 0 else 0
+st.markdown(
+    f'<div style="background:#0e0e1c;border:1px solid #2a2a48;border-radius:8px;'
+    f'padding:10px 16px;margin:8px 0;display:flex;gap:32px;">'
+    f'<span style="font-size:13px;color:#9090B8;">Planned Investment: '
+    f'<b style="color:#C8A96E;">{currency}{_planned:,.0f}</b></span>'
+    f'<span style="font-size:13px;color:#9090B8;">Shares to buy: '
+    f'<b style="color:#C8A96E;">{_shares_preview}</b></span>'
+    f'<span style="font-size:13px;color:#9090B8;">Direction: '
+    f'<b style="color:{"#2DD4A0" if direction == "LONG" else "#E05F5F"};">{direction}</b></span>'
+    f'</div>',
+    unsafe_allow_html=True
+)
 
 # ─── Calculate button ─────────────────────────────────────────────────────────
 st.markdown("")
@@ -1257,37 +1287,51 @@ calc_btn = st.button("⚡ Calculate Trade", use_container_width=True, type="prim
 # ─── תוצאות ──────────────────────────────────────────────────────────────────
 if calc_btn:
     errors = []
-    if target <= entry:
-        errors.append("Target must be above the entry price")
-    if stop >= entry:
-        errors.append("Stop loss must be below the entry price")
-    if risk_amount <= 0:
-        errors.append("Risk amount must be positive")
+    if direction == "LONG":
+        if target <= entry:
+            errors.append("Target must be above entry price (LONG)")
+        if stop >= entry:
+            errors.append("Stop loss must be below entry price (LONG)")
+    else:
+        if target >= entry:
+            errors.append("Target must be below entry price (SHORT)")
+        if stop <= entry:
+            errors.append("Stop loss must be above entry price (SHORT)")
+    if account_size <= 0:
+        errors.append("Account size must be positive")
 
     if errors:
         for e in errors:
             st.error(e)
     else:
         try:
-            result = evaluate_trade(
-                entry=entry, target=target, stop_loss=stop,
-                risk_amount=risk_amount, portfolio_value=portfolio_value,
-                commission=commission, spread_pct=spread_pct,
-                atr=atr_val, ticker=ticker,
+            result = evaluate_trade_v3(
+                ticker=ticker,
+                direction=direction,
+                account_size=account_size,
+                pct_investing=pct_inv_input / 100,
+                entry=entry,
+                stop=stop,
+                target=target,
+                commission=commission,
             )
 
-            is_go = result["rr"]["rr_ratio"] >= 2.0
-            banner_color = "#2DD4A0" if is_go else "#E05F5F"
-            banner_glow  = "#2DD4A015" if is_go else "#E05F5F15"
-            verdict_text = "GO" if is_go else "NO-GO"
-            verdict_icon = "✦" if is_go else "✕"
+            is_go        = result["verdict"] == "GO"
+            rr_ratio     = result["rr"]
+            shares       = result["shares"]
+            gross_profit = result["gross_profit"]
+            net_profit   = result["net_profit"]
+            profit_pct   = result["profit_pct"]
+            risk_total   = result["risk_total"]
+            gross_loss   = risk_total
 
-            rr_ratio     = result["rr"]["rr_ratio"]
-            pct_to_target = (target - entry) / entry * 100
-            pct_to_stop   = (entry - stop)  / entry * 100
-            shares        = result["position"]["shares"]
-            gross_profit  = result["rr"]["reward"] * shares
-            gross_loss    = result["position"]["risk_amount"]
+            banner_color  = "#2DD4A0" if is_go else "#E05F5F"
+            banner_glow   = "#2DD4A015" if is_go else "#E05F5F15"
+            verdict_text  = "GO" if is_go else "NO-GO"
+            verdict_icon  = "✦" if is_go else "✕"
+
+            pct_to_target = abs(target - entry) / entry * 100
+            pct_to_stop   = abs(entry - stop)   / entry * 100
 
             # R:R bar marker position (clamped 0–100% for 0–4 range)
             rr_pct = min(100, rr_ratio / 4 * 100)
@@ -1323,39 +1367,57 @@ if calc_btn:
                 unsafe_allow_html=True
             )
 
-            # ── Profit / Loss summary row ─────────────────────────────────────
-            st.markdown(
-                f'<div class="pnl-row">'
-                f'<div class="pnl-card" style="border-color:#2DD4A033;">'
-                f'<div class="pnl-label">Potential Profit</div>'
-                f'<div class="pnl-value" style="color:#2DD4A0;">+{currency}{gross_profit:,.0f}</div>'
-                f'<div style="font-size:10px;color:#6E6E92;margin-top:4px;">{shares} shares × {currency}{result["rr"]["reward"]:,.2f}</div>'
+            # ── Income Forecast ───────────────────────────────────────────────
+            _income_html = (
+                f'<div style="background:#10101e;border:1px solid #2a2a48;border-radius:14px;'
+                f'padding:22px 26px;margin:16px 0;">'
+                f'<div style="font-size:11px;font-weight:700;color:#C8A96E;letter-spacing:2px;'
+                f'text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;'
+                f'border-bottom:1px solid #2a2a48;">📊 Income Forecast</div>'
+                # stats row
+                f'<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px;">'
+                f'<div><div style="font-size:11px;color:#9090B8;margin-bottom:4px;letter-spacing:1px;">SHARES</div>'
+                f'<div style="font-size:22px;font-weight:700;color:#F0ECE6;">{shares}</div></div>'
+                f'<div><div style="font-size:11px;color:#9090B8;margin-bottom:4px;letter-spacing:1px;">INVESTED</div>'
+                f'<div style="font-size:22px;font-weight:700;color:#F0ECE6;">{currency}{result["actual_investment"]:,.0f}</div></div>'
+                f'<div><div style="font-size:11px;color:#9090B8;margin-bottom:4px;letter-spacing:1px;">MAX RISK</div>'
+                f'<div style="font-size:22px;font-weight:700;color:#E05F5F;">{currency}{risk_total:,.0f}</div></div>'
+                f'<div><div style="font-size:11px;color:#9090B8;margin-bottom:4px;letter-spacing:1px;">GROSS PROFIT</div>'
+                f'<div style="font-size:22px;font-weight:700;color:#2DD4A0;">+{currency}{gross_profit:,.0f}</div></div>'
+                f'<div><div style="font-size:11px;color:#9090B8;margin-bottom:4px;letter-spacing:1px;">COMMISSION</div>'
+                f'<div style="font-size:22px;font-weight:700;color:#E05F5F;">-{currency}{result["commission_total"]:,.0f}</div></div>'
+                f'<div><div style="font-size:11px;color:#9090B8;margin-bottom:4px;letter-spacing:1px;">NET PROFIT</div>'
+                f'<div style="font-size:24px;font-weight:900;color:#2DD4A0;">+{currency}{net_profit:,.0f}'
+                f'<span style="font-size:15px;color:#9090B8;font-weight:400;"> (+{profit_pct:.1f}%)</span></div></div>'
                 f'</div>'
-                f'<div class="pnl-card" style="border-color:#E05F5F33;">'
-                f'<div class="pnl-label">Max Risk</div>'
-                f'<div class="pnl-value" style="color:#E05F5F;">-{currency}{gross_loss:,.0f}</div>'
-                f'<div style="font-size:10px;color:#6E6E92;margin-top:4px;">{shares} shares × {currency}{result["rr"]["risk"]:,.2f}</div>'
-                f'</div>'
-                f'</div>',
-                unsafe_allow_html=True
+                f'<div style="border-top:1px solid #2a2a48;margin-bottom:14px;"></div>'
+                f'<div style="font-size:11px;font-weight:700;color:#C8A96E;letter-spacing:2px;'
+                f'text-transform:uppercase;margin-bottom:10px;">🎯 Exit Tiers</div>'
             )
+            for _tier in result["exit_tiers"]:
+                _tc = "#2DD4A0" if _tier["profit"] > 0 else "#E05F5F"
+                _income_html += (
+                    f'<div style="display:flex;justify-content:space-between;align-items:center;'
+                    f'padding:7px 0;border-bottom:1px solid #16162a;">'
+                    f'<span style="font-size:13px;color:#9090B8;min-width:70px;">{_tier["pct"]}% exit</span>'
+                    f'<span style="font-size:13px;color:#EDE8E0;">{int(_tier["shares"])} shares @ '
+                    f'{currency}{_tier["price"]:,.2f}</span>'
+                    f'<span style="font-size:15px;font-weight:700;color:{_tc};">+{currency}{_tier["profit"]:,.0f}'
+                    f'<span style="font-size:12px;color:#6E6E92;font-weight:400;"> '
+                    f'(+{_tier["pct_return"]:.1f}%)</span></span>'
+                    f'</div>'
+                )
+            _income_html += f'</div>'
+            st.markdown(_income_html, unsafe_allow_html=True)
 
-            # ── Metric cards ──────────────────────────────────────────────────
+            # ── Metric summary row ────────────────────────────────────────────
             col_m1, col_m2, col_m3 = st.columns(3)
             with col_m1:
-                st.metric("R:R", result["rr"]["formatted"])
+                st.metric("R:R", result["rr_formatted"])
             with col_m2:
                 st.metric("Shares", f"{shares}")
             with col_m3:
-                st.metric("Total Cost", f"{currency}{result['position']['total_cost']:,.0f}")
-
-            col_m4, col_m5, col_m6 = st.columns(3)
-            with col_m4:
-                st.metric("Breakeven", f"{currency}{result['breakeven']['breakeven_price']:,.2f}")
-            with col_m5:
-                st.metric("Risk", f"{currency}{gross_loss:,.0f}")
-            with col_m6:
-                st.metric("Fees + Spread", f"{currency}{result['breakeven']['total_commission']:,.2f}")
+                st.metric("Total Invested", f"{currency}{result['actual_investment']:,.0f}")
 
             # ── Chart with zone fills + levels (Phase 3 + 5) ─────────────────
             fig2 = make_subplots(rows=2, cols=1, shared_xaxes=True,
@@ -1423,11 +1485,15 @@ if calc_btn:
                 if st.button("💾 Save to Journal", key="save_trade", use_container_width=True):
                     save_trade({
                         "ticker":       ticker,
+                        "direction":    direction,
                         "entry":        entry,
                         "target":       target,
                         "stop":         stop,
                         "rr_ratio":     round(rr_ratio, 2),
                         "shares":       shares,
+                        "invested":     round(result["actual_investment"], 2),
+                        "net_profit":   round(net_profit, 2),
+                        "profit_pct":   round(profit_pct, 2),
                         "risk":         round(gross_loss, 2),
                         "verdict":      "GO" if is_go else "NO-GO",
                         "news_score":   round(news_score, 2),
@@ -1436,12 +1502,94 @@ if calc_btn:
                     st.success("✓ Saved to journal")
                     st.rerun()
 
-            # ── Detailed table ────────────────────────────────────────────────
-            with st.expander("Detailed Calculation Table"):
-                st.markdown(result["markdown_table"])
+            # ── Detailed breakdown ────────────────────────────────────────────
+            with st.expander("Full Calculation Breakdown"):
+                _detail_rows = [
+                    ("Ticker",         ticker),
+                    ("Direction",      direction),
+                    ("Account Size",   f"{currency}{result['account_size']:,.0f}"),
+                    ("% Investing",    f"{result['pct_investing']:.0f}%"),
+                    ("Planned Invest", f"{currency}{result['planned_investment']:,.0f}"),
+                    ("Actual Invest",  f"{currency}{result['actual_investment']:,.0f}"),
+                    ("Shares",         str(shares)),
+                    ("Entry",          f"{currency}{entry:,.2f}"),
+                    ("Stop Loss",      f"{currency}{stop:,.2f}"),
+                    ("Target",         f"{currency}{target:,.2f}"),
+                    ("Risk / Share",   f"{currency}{result['risk_per_share']:,.4f}"),
+                    ("Reward / Share", f"{currency}{result['reward_per_share']:,.4f}"),
+                    ("R:R",            result["rr_formatted"]),
+                    ("Total Risk",     f"{currency}{risk_total:,.2f}"),
+                    ("Gross Profit",   f"+{currency}{gross_profit:,.2f}"),
+                    ("Commission",     f"-{currency}{result['commission_total']:,.2f}"),
+                    ("Net Profit",     f"+{currency}{net_profit:,.2f}"),
+                    ("Return on Inv",  f"+{profit_pct:.2f}%"),
+                ]
+                _tbl = "| פרמטר | ערך |\n|---|---|\n"
+                for k, v in _detail_rows:
+                    _tbl += f"| {k} | **{v}** |\n"
+                st.markdown(_tbl)
 
         except ValueError as e:
             st.error(f"Calculation error: {e}")
+
+# ─── פאנל תמיכה/התנגדות (תחתית העמוד) ───────────────────────────────────────
+st.markdown("---")
+_sr_levels = (sr_data or {}).get("levels", [])
+if _sr_levels:
+    _sr_price = (sr_data or {}).get("current_price") or price
+    _rows_sr  = ""
+    _cp_inserted = False
+    for _lvl in _sr_levels:
+        _lp = _lvl["price"]
+        _lt = _lvl.get("type", "neutral")
+        _lg = _lvl.get("group", "")
+        _ln = _lvl["name"]
+        if not _cp_inserted and _lp < _sr_price:
+            _cp_inserted = True
+            _rows_sr += (
+                f'<div style="display:flex;justify-content:space-between;align-items:center;'
+                f'padding:8px 12px;background:#C8A96E12;border-radius:6px;margin:5px 0;">'
+                f'<span style="font-size:12px;font-weight:700;color:#C8A96E;">◆ CURRENT PRICE</span>'
+                f'<span style="font-size:15px;font-weight:900;color:#C8A96E;">{currency}{_sr_price:,.2f}</span>'
+                f'<span style="font-size:11px;color:#C8A96E88;">NOW</span>'
+                f'</div>'
+            )
+        _color = "#E05F5F" if _lt == "resistance" else "#2DD4A0" if _lt == "support" else "#C8A96E"
+        _lbl   = "התנגדות" if _lt == "resistance" else "תמיכה" if _lt == "support" else "—"
+        _rows_sr += (
+            f'<div style="display:flex;justify-content:space-between;align-items:center;'
+            f'padding:5px 4px;border-bottom:1px solid #16162a;">'
+            f'<div style="display:flex;align-items:center;gap:8px;min-width:0;">'
+            f'<span style="color:{_color};font-size:9px;">●</span>'
+            f'<span style="font-size:13px;color:#EDE8E0;white-space:nowrap;">{_ln}</span>'
+            f'<span style="font-size:10px;color:#6E6E92;background:#14142a;border-radius:4px;'
+            f'padding:1px 6px;white-space:nowrap;">{_lg}</span>'
+            f'</div>'
+            f'<div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">'
+            f'<span style="font-size:15px;font-weight:700;color:{_color};">{currency}{_lp:,.2f}</span>'
+            f'<span style="font-size:11px;color:{_color};min-width:56px;text-align:right;">{_lbl}</span>'
+            f'</div>'
+            f'</div>'
+        )
+    if not _cp_inserted:
+        _rows_sr = (
+            f'<div style="display:flex;justify-content:space-between;align-items:center;'
+            f'padding:8px 12px;background:#C8A96E12;border-radius:6px;margin:0 0 6px 0;">'
+            f'<span style="font-size:12px;font-weight:700;color:#C8A96E;">◆ CURRENT PRICE</span>'
+            f'<span style="font-size:15px;font-weight:900;color:#C8A96E;">{currency}{_sr_price:,.2f}</span>'
+            f'<span style="font-size:11px;color:#C8A96E88;">NOW</span>'
+            f'</div>'
+        ) + _rows_sr
+    st.markdown(
+        f'<div style="background:#10101e;border:1px solid #2a2a48;border-radius:12px;'
+        f'padding:18px 22px;margin:12px 0 16px 0;">'
+        f'<div style="font-size:11px;font-weight:700;color:#C8A96E;letter-spacing:2px;'
+        f'text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;'
+        f'border-bottom:1px solid #2a2a48;">Support &amp; Resistance — 10 מדדים</div>'
+        f'{_rows_sr}'
+        f'</div>',
+        unsafe_allow_html=True
+    )
 
 # ─── Footer (Phase 6) ─────────────────────────────────────────────────────────
 _updated = datetime.now().strftime("%H:%M:%S")
