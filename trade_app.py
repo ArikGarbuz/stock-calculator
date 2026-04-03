@@ -848,9 +848,22 @@ if mkt.get("next_open"):
     _next_open_html = f'<div class="next-open-label">{mkt["next_open"]}</div>'
 
 # ── Pre / After-hours price ────────────────────────────────────────────────────
-_ext_p   = mkt.get("pre_price")   if _state == "PRE"  else mkt.get("post_price")
-_ext_pct = mkt.get("pre_chg_pct") if _state == "PRE"  else mkt.get("post_chg_pct")
-_ext_tag = "Pre-Market" if _state == "PRE" else ("After-Hours" if _ext_p else None)
+# PRE state: prefer pre_price; if no pre-market trading yet fall back to yesterday's post_price
+if _state == "PRE":
+    if mkt.get("pre_price"):
+        _ext_p   = mkt.get("pre_price")
+        _ext_pct = mkt.get("pre_chg_pct")
+        _ext_tag = "Pre-Market"
+    elif mkt.get("post_price"):
+        _ext_p   = mkt.get("post_price")
+        _ext_pct = mkt.get("post_chg_pct")
+        _ext_tag = "After-Hours"
+    else:
+        _ext_p = _ext_pct = _ext_tag = None
+else:
+    _ext_p   = mkt.get("post_price")
+    _ext_pct = mkt.get("post_chg_pct")
+    _ext_tag = "After-Hours" if _ext_p else None
 
 # If ext price available → it becomes the MAIN displayed price; regular close shown below
 _has_ext = bool(_ext_p and _ext_tag)
