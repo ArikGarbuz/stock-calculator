@@ -146,14 +146,29 @@ stock calculator/
 streamlit run trade_app.py
 ```
 
+## גרסה נוכחית: v2.6 (2026-04-03)
+
 ## תכונות עיקריות (trade_app.py)
 - **Wide layout** — sidebar watchlist + main calculator
 - **Watchlist** — שמירה ב-JSON, טעינה חד-קליקית, מחיר חי
 - **Trade Journal** — שמירת עסקאות, KPI cards, סינון, מחיקה
 - **Market Status** — badge OPEN/PRE-MARKET/AFTER-HOURS/CLOSED + מחיר after-hours
+- **Extended Hours Price** — מחיר pre/after-market כמחיר ראשי + "Last Close" כמשני
+  - PRE state: אם אין pre-market price → מציג after-hours של אתמול (fallback)
+  - POST/CLOSED state: מציג postMarketPrice
 - **AI Scan** — News Scout + Social Pulse + sentiment gauge
 - **Chart** — candlestick + SMA-20 + volume, tabs 5D/1M/3M
 - **GO/NO-GO** — R:R >= 2.0 → GO ✅, עם progress bar ו-glow animation
+- **Volume Strip** — volume היום, 3M avg, 6M avg, % vs average
+- **Price Trends** — שינוי % ב-30D/60D/90D
+
+## Innovation Index: 78/100
+**הבא:** RSI badge (+2), auto-refresh בשוק פתוח (+2), CSV export (+1) → 83/100
+
+## Deployment
+- **Streamlit Cloud:** https://stock-calculator.streamlit.app/
+- **Entry point:** `trade_app.py` (או `app.py` שמפנה אליו)
+- **GitHub:** https://github.com/ArikGarbuz/stock-calculator
 
 ## Sales Manager — הפעלה
 
