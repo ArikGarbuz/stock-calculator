@@ -1,0 +1,8 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "landing/Dockerfile.landing"
+
+[deploy]
+startCommand = "gunicorn landing.server:app --bind 0.0.0.0:$PORT --workers 2"
+healthcheckPath = "/health"
+healthcheckTimeout = 30

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TradeIQ — Smart Trading Decisions</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50:'#f0fdf4', 100:'#dcfce7', 400:'#4ade80', 500:'#22c55e', 600:'#16a34a', 900:'#14532d' },
+            dark:  { 900:'#0f1117', 800:'#161b22', 700:'#1c2333', 600:'#21262d' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: #0f1117; color: #e6edf3; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .glow { box-shadow: 0 0 30px rgba(34,197,94,0.15); }
+    .card { background: #161b22; border: 1px solid #21262d; }
+  </style>
+</head>
+<body>
+
+<!-- ─── NAV ─────────────────────────────────────────────────────────── -->
+<nav class="fixed top-0 w-full z-50 bg-dark-900/80 backdrop-blur border-b border-dark-600">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="text-brand-400 text-2xl">📊</span>
+      <span class="text-xl font-bold text-white">TradeIQ</span>
+    </div>
+    <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
+      <a href="#features" class="hover:text-white transition">Features</a>
+      <a href="#pricing" class="hover:text-white transition">Pricing</a>
+      <a href="#faq" class="hover:text-white transition">FAQ</a>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="/login" class="text-sm text-gray-400 hover:text-white transition">Sign in</a>
+      <a href="#pricing" class="bg-brand-500 hover:bg-brand-600 text-white text-sm px-4 py-2 rounded-lg font-medium transition">
+        Start Free
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ─── HERO ─────────────────────────────────────────────────────────── -->
+<section class="pt-32 pb-20 px-6 text-center">
+  <div class="max-w-4xl mx-auto">
+    <div class="inline-flex items-center gap-2 bg-brand-900/40 border border-brand-500/30 text-brand-400 text-sm px-4 py-2 rounded-full mb-8">
+      <span class="w-2 h-2 bg-brand-400 rounded-full animate-pulse"></span>
+      Now supporting NYSE, NASDAQ + TASE (Israeli market)
+    </div>
+    <h1 class="text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
+      Trade smarter.<br/>
+      <span class="text-brand-400">Not just harder.</span>
+    </h1>
+    <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
+      TradeIQ combines news sentiment, social pulse, and an instant R:R calculator
+      so you enter every trade with a clear GO / NO-GO signal.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="#pricing"
+         class="bg-brand-500 hover:bg-brand-600 text-white font-semibold px-8 py-4 rounded-xl text-lg transition glow">
+        Start for Free →
+      </a>
+      <a href="https://demo.tradeiq.app"
+         class="border border-dark-600 hover:border-gray-500 text-gray-300 hover:text-white font-semibold px-8 py-4 rounded-xl text-lg transition">
+        Live Demo
+      </a>
+    </div>
+    <!-- social proof -->
+    <p class="mt-8 text-sm text-gray-500">
+      Trusted by <span class="text-white font-medium">500+</span> traders on NYSE, NASDAQ &amp; TASE
+    </p>
+  </div>
+
+  <!-- dashboard mockup -->
+  <div class="max-w-5xl mx-auto mt-16 card rounded-2xl p-1 glow">
+    <div class="bg-dark-700 rounded-xl p-6">
+      <div class="grid grid-cols-3 gap-4 mb-4">
+        <div class="bg-dark-900 rounded-lg p-4 text-left">
+          <div class="text-xs text-gray-500 mb-1">R:R Ratio</div>
+          <div class="text-2xl font-bold text-brand-400">2.14</div>
+          <div class="text-xs text-brand-400 mt-1">✅ GO</div>
+        </div>
+        <div class="bg-dark-900 rounded-lg p-4 text-left">
+          <div class="text-xs text-gray-500 mb-1">News Sentiment</div>
+          <div class="text-2xl font-bold text-brand-400">+0.67</div>
+          <div class="text-xs text-gray-400 mt-1">5 headlines</div>
+        </div>
+        <div class="bg-dark-900 rounded-lg p-4 text-left">
+          <div class="text-xs text-gray-500 mb-1">Social Pulse</div>
+          <div class="text-2xl font-bold text-yellow-400">68%</div>
+          <div class="text-xs text-gray-400 mt-1">Bullish</div>
+        </div>
+      </div>
+      <div class="bg-dark-900 rounded-lg p-4 text-left">
+        <div class="text-xs text-gray-500 mb-2">Trade Calculator — AAPL</div>
+        <div class="grid grid-cols-4 gap-3 text-sm">
+          <div><span class="text-gray-500">Entry</span><br/><span class="text-white font-mono">$255.00</span></div>
+          <div><span class="text-gray-500">Target</span><br/><span class="text-brand-400 font-mono">$270.00</span></div>
+          <div><span class="text-gray-500">Stop</span><br/><span class="text-red-400 font-mono">$248.00</span></div>
+          <div><span class="text-gray-500">Position</span><br/><span class="text-white font-mono">14 shares</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FEATURES ─────────────────────────────────────────────────────── -->
+<section id="features" class="py-20 px-6">
+  <div class="max-w-6xl mx-auto">
+    <h2 class="text-3xl font-bold text-white text-center mb-4">Everything you need before entering a trade</h2>
+    <p class="text-gray-400 text-center mb-14 max-w-xl mx-auto">
+      Stop juggling 3 tools. TradeIQ puts news, social sentiment, and risk calculation in one dashboard.
+    </p>
+    <div class="grid md:grid-cols-3 gap-6">
+
+      <div class="card rounded-xl p-6">
+        <div class="text-3xl mb-4">📰</div>
+        <h3 class="text-lg font-semibold text-white mb-2">News Scout</h3>
+        <p class="text-gray-400 text-sm">
+          5 latest headlines with AI sentiment score (-1 to +1). Know if the market agrees with your thesis before you click buy.
+        </p>
+      </div>
+
+      <div class="card rounded-xl p-6 border-brand-500/30">
+        <div class="text-3xl mb-4">📡</div>
+        <h3 class="text-lg font-semibold text-white mb-2">Social Pulse</h3>
+        <p class="text-gray-400 text-sm">
+          Real-time bullish/bearish % from StockTwits + Reddit. See what retail traders are doing right now.
+        </p>
+      </div>
+
+      <div class="card rounded-xl p-6">
+        <div class="text-3xl mb-4">🧮</div>
+        <h3 class="text-lg font-semibold text-white mb-2">Trade Calculator</h3>
+        <p class="text-gray-400 text-sm">
+          Enter price, target, stop → instant R:R ratio, position size, breakeven, and automatic GO / NO-GO signal.
+        </p>
+      </div>
+
+      <div class="card rounded-xl p-6">
+        <div class="text-3xl mb-4">🇮🇱</div>
+        <h3 class="text-lg font-semibold text-white mb-2">TASE Support</h3>
+        <p class="text-gray-400 text-sm">
+          The only tool that supports Israeli stocks with full tax calculation (25% + sur-tax). TEVA.TA, NICE.TA, and more.
+        </p>
+      </div>
+
+      <div class="card rounded-xl p-6">
+        <div class="text-3xl mb-4">⚡</div>
+        <h3 class="text-lg font-semibold text-white mb-2">Auto-Trigger Workflow</h3>
+        <p class="text-gray-400 text-sm">
+          When sentiment is positive, TradeIQ auto-calculates a trade with ATR-based stop suggestion. Zero manual steps.
+        </p>
+      </div>
+
+      <div class="card rounded-xl p-6">
+        <div class="text-3xl mb-4">📊</div>
+        <h3 class="text-lg font-semibold text-white mb-2">Trade Journal</h3>
+        <p class="text-gray-400 text-sm">
+          Track every trade, measure your win rate and expectancy. Know if your edge is real or luck.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── PRICING ───────────────────────────────────────────────────────── -->
+<section id="pricing" class="py-20 px-6 bg-dark-800">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl font-bold text-white text-center mb-4">Simple pricing</h2>
+    <p class="text-gray-400 text-center mb-14">Start free. Upgrade when you're ready.</p>
+
+    <div class="grid md:grid-cols-3 gap-6">
+
+      <!-- Free -->
+      <div class="card rounded-2xl p-8 flex flex-col">
+        <div class="text-gray-400 text-sm font-medium uppercase tracking-wide mb-2">Free</div>
+        <div class="text-4xl font-bold text-white mb-1">$0</div>
+        <div class="text-gray-500 text-sm mb-8">Forever</div>
+        <ul class="space-y-3 text-sm text-gray-300 flex-1 mb-8">
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> R:R Calculator</li>
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> 10 news scans / day</li>
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> 5 stocks in portfolio</li>
+          <li class="flex gap-2"><span class="text-gray-600">✗</span> <span class="text-gray-600">Social Pulse</span></li>
+          <li class="flex gap-2"><span class="text-gray-600">✗</span> <span class="text-gray-600">Alerts</span></li>
+        </ul>
+        <a href="/register?plan=free"
+           class="block text-center border border-dark-600 hover:border-gray-500 text-gray-300 hover:text-white py-3 rounded-xl text-sm font-medium transition">
+          Start Free
+        </a>
+      </div>
+
+      <!-- Pro (highlighted) -->
+      <div class="rounded-2xl p-8 flex flex-col relative glow"
+           style="background: linear-gradient(135deg, #161b22 0%, #1a2730 100%); border: 1px solid #22c55e50;">
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+          <span class="bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-full">MOST POPULAR</span>
+        </div>
+        <div class="text-brand-400 text-sm font-medium uppercase tracking-wide mb-2">Pro</div>
+        <div class="text-4xl font-bold text-white mb-1">$29</div>
+        <div class="text-gray-500 text-sm mb-8">/ month</div>
+        <ul class="space-y-3 text-sm text-gray-300 flex-1 mb-8">
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> Everything in Free</li>
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> Unlimited news scans</li>
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> Social Pulse</li>
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> 50 stocks in portfolio</li>
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> 10 price alerts</li>
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> Excel export</li>
+        </ul>
+        <a href="/checkout?plan=pro"
+           class="block text-center bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-xl text-sm font-semibold transition">
+          Get Pro →
+        </a>
+      </div>
+
+      <!-- Elite -->
+      <div class="card rounded-2xl p-8 flex flex-col">
+        <div class="text-gray-400 text-sm font-medium uppercase tracking-wide mb-2">Elite</div>
+        <div class="text-4xl font-bold text-white mb-1">$79</div>
+        <div class="text-gray-500 text-sm mb-8">/ month</div>
+        <ul class="space-y-3 text-sm text-gray-300 flex-1 mb-8">
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> Everything in Pro</li>
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> Real-time WebSocket alerts</li>
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> Full API access</li>
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> Unlimited portfolio</li>
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> Priority support</li>
+          <li class="flex gap-2"><span class="text-brand-400">✓</span> Personal onboarding</li>
+        </ul>
+        <a href="/checkout?plan=elite"
+           class="block text-center border border-brand-500/50 hover:bg-brand-500/10 text-brand-400 hover:text-brand-300 py-3 rounded-xl text-sm font-medium transition">
+          Get Elite
+        </a>
+      </div>
+
+    </div>
+
+    <p class="text-center text-gray-500 text-sm mt-8">
+      All plans include 14-day free trial · Cancel anytime · No credit card for Free plan
+    </p>
+  </div>
+</section>
+
+<!-- ─── FAQ ───────────────────────────────────────────────────────────── -->
+<section id="faq" class="py-20 px-6">
+  <div class="max-w-3xl mx-auto">
+    <h2 class="text-3xl font-bold text-white text-center mb-14">FAQ</h2>
+    <div class="space-y-4">
+
+      <details class="card rounded-xl p-6 cursor-pointer group">
+        <summary class="font-medium text-white flex justify-between items-center">
+          Does it work with Israeli stocks (TASE)?
+          <span class="text-gray-500 group-open:rotate-180 transition">▼</span>
+        </summary>
+        <p class="mt-4 text-gray-400 text-sm">
+          Yes. TradeIQ fully supports TASE — just add .TA suffix (e.g., TEVA.TA). The trade calculator includes Israeli tax calculation (25% capital gains + 3% sur-tax above ₪698,280).
+        </p>
+      </details>
+
+      <details class="card rounded-xl p-6 cursor-pointer group">
+        <summary class="font-medium text-white flex justify-between items-center">
+          How is this different from TradingView?
+          <span class="text-gray-500 group-open:rotate-180 transition">▼</span>
+        </summary>
+        <p class="mt-4 text-gray-400 text-sm">
+          TradingView is great for charting but has no trade calculator, no social sentiment aggregation, and no TASE support. TradeIQ is a decision tool — it tells you whether to enter a specific trade and at what size.
+        </p>
+      </details>
+
+      <details class="card rounded-xl p-6 cursor-pointer group">
+        <summary class="font-medium text-white flex justify-between items-center">
+          What data sources do you use?
+          <span class="text-gray-500 group-open:rotate-180 transition">▼</span>
+        </summary>
+        <p class="mt-4 text-gray-400 text-sm">
+          News: Marketaux + Finnhub. Social: StockTwits + Reddit. Market data: Yahoo Finance (real-time). All sources are aggregated and scored automatically.
+        </p>
+      </details>
+
+      <details class="card rounded-xl p-6 cursor-pointer group">
+        <summary class="font-medium text-white flex justify-between items-center">
+          Can I cancel anytime?
+          <span class="text-gray-500 group-open:rotate-180 transition">▼</span>
+        </summary>
+        <p class="mt-4 text-gray-400 text-sm">
+          Yes. Cancel from your account settings with one click. You keep access until the end of your billing period.
+        </p>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ───────────────────────────────────────────────────────────── -->
+<section class="py-20 px-6 text-center">
+  <div class="max-w-2xl mx-auto card rounded-2xl p-12 glow">
+    <h2 class="text-3xl font-bold text-white mb-4">Ready to trade smarter?</h2>
+    <p class="text-gray-400 mb-8">Start free today. No credit card required.</p>
+    <a href="/register?plan=free"
+       class="inline-block bg-brand-500 hover:bg-brand-600 text-white font-semibold px-10 py-4 rounded-xl text-lg transition">
+      Create Free Account →
+    </a>
+  </div>
+</section>
+
+<!-- ─── FOOTER ────────────────────────────────────────────────────────── -->
+<footer class="border-t border-dark-600 py-10 px-6">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <span class="text-brand-400">📊</span>
+      <span class="text-white font-semibold">TradeIQ</span>
+      <span class="text-gray-600 text-sm">— Smart Trading Decisions</span>
+    </div>
+    <div class="flex gap-6 text-sm text-gray-500">
+      <a href="/privacy" class="hover:text-gray-300 transition">Privacy</a>
+      <a href="/terms" class="hover:text-gray-300 transition">Terms</a>
+      <a href="mailto:support@tradeiq.app" class="hover:text-gray-300 transition">Support</a>
+    </div>
+    <div class="text-gray-600 text-sm">© 2026 TradeIQ. Not financial advice.</div>
+  </div>
+</footer>
+
+</body>
+</html>
