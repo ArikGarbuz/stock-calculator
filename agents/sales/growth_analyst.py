@@ -1,9 +1,8 @@
 """
-growth_analyst.py — סוכן ניתוח צמיחה
+growth_analyst.py — סוכן ניתוח צמיחה (מודל Freemium)
 אחריות:
-  - חישוב MRR, ARR, LTV, CAC, Churn
+  - מעקב MAU, retention, affiliate revenue, ad revenue
   - מעקב אחר יעדים חודשיים
-  - זיהוי בעיות בפני funnel
   - הפקת דוח יומי
 """
 
@@ -11,9 +10,8 @@ import json
 import os
 from datetime import datetime, date
 
-METRICS_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "sales", "metrics.json")
-PIPELINE_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "sales", "pipeline.json")
-PRICING_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "sales", "pricing.json")
+METRICS_PATH   = os.path.join(os.path.dirname(__file__), "..", "..", "data", "sales", "metrics.json")
+AFFILIATE_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "sales", "affiliates.json")
 
 
 def load_metrics() -> dict:
@@ -26,100 +24,52 @@ def save_metrics(data: dict) -> None:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-def calculate_mrr(paying_users: list, pricing: dict) -> float:
-    """מחשב MRR לפי breakdown של משתמשים משלמים לפי tier."""
-    tiers = pricing.get("tiers", {})
-    mrr = 0.0
-    for user in paying_users:
-        tier = user.get("tier", "pro")
-        price = tiers.get(tier, {}).get("price_usd", 0)
-        mrr += price
-    return mrr
-
-
-def calculate_ltv(arpu: float, churn_rate: float) -> float:
-    """LTV = ARPU / Monthly Churn Rate."""
-    if churn_rate <= 0:
-        return arpu * 24  # assume 24 months if no churn data yet
-    return round(arpu / churn_rate, 2)
-
-
-def calculate_cac(marketing_spend: float, new_customers: int) -> float:
-    """CAC = Marketing Spend / New Customers."""
-    if new_customers <= 0:
-        return 0.0
-    return round(marketing_spend / new_customers, 2)
-
-
 def run_growth_analysis(
-    paying_users: int = 0,
-    trial_users: int = 0,
-    free_users: int = 0,
-    new_signups_30d: int = 0,
-    churned_30d: int = 0,
-    marketing_spend_30d: float = 0.0,
+    monthly_active_users: int = 0,
+    new_users_30d: int = 0,
+    ad_impressions_30d: int = 0,
+    ad_revenue_usd: float = 0.0,
 ) -> dict:
     """
-    מריץ ניתוח צמיחה מלא ועדכן metrics.json.
-    כאשר אין נתונים אמיתיים עדיין — מחשב על בסיס pipeline.
+    מריץ ניתוח צמיחה freemium.
+    affiliate revenue נלקח מ-affiliates.json.
     """
-    # טען נתונים מה-pipeline אם לא סופקו
+    # קרא affiliate data
     try:
-        with open(PIPELINE_PATH, encoding="utf-8") as f:
-            pipeline = json.load(f)
-        if paying_users == 0:
-            paying_users = pipeline["stats"].get("total_paying", 0)
-        if trial_users == 0:
-            trial_users = pipeline["stats"].get("total_trial", 0)
+        with open(AFFILIATE_PATH, encoding="utf-8") as f:
+            aff = json.load(f)
+        affiliate_clicks   = aff.get("total_clicks", 0)
+        affiliate_conv     = aff.get("total_conversions", 0)
+        affiliate_revenue  = aff.get("total_revenue_usd", 0.0)
     except Exception:
-        pass
+        affiliate_clicks = affiliate_conv = 0
+        affiliate_revenue = 0.0
 
-    try:
-        with open(PRICING_PATH, encoding="utf-8") as f:
-            pricing = json.load(f)
-        avg_price = pricing["tiers"]["pro"]["price_usd"]
-    except Exception:
-        avg_price = 29.0
-
-    total_users = paying_users + trial_users + free_users
-    mrr = paying_users * avg_price
-    arr = mrr * 12
-    churn_rate = churned_30d / max(paying_users, 1)
-    ltv = calculate_ltv(avg_price, churn_rate)
-    cac = calculate_cac(marketing_spend_30d, max(new_signups_30d - trial_users, 1))
-    ltv_cac = round(ltv / max(cac, 1), 2)
-
-    # conversion rates
-    free_to_trial = round(trial_users / max(free_users, 1), 3)
-    trial_to_paying = round(paying_users / max(trial_users, 1), 3)
+    total_revenue = affiliate_revenue + ad_revenue_usd
+    rpm = round((total_revenue / max(ad_impressions_30d, 1)) * 1000, 2)
 
     metrics = {
         "date": date.today().isoformat(),
-        "mrr_usd": mrr,
-        "arr_usd": arr,
-        "total_users": total_users,
-        "paying_users": paying_users,
-        "trial_users": trial_users,
-        "free_users": free_users,
-        "new_signups_30d": new_signups_30d,
-        "churned_30d": churned_30d,
-        "churn_rate": round(churn_rate, 3),
-        "ltv_usd": ltv,
-        "cac_usd": cac,
-        "ltv_cac_ratio": ltv_cac,
-        "free_to_trial_rate": free_to_trial,
-        "trial_to_paying_rate": trial_to_paying,
-        "nps": None,
+        "monthly_active_users": monthly_active_users,
+        "new_users_30d": new_users_30d,
+        "returning_users_30d": max(0, monthly_active_users - new_users_30d),
+        "affiliate_clicks_30d": affiliate_clicks,
+        "affiliate_conversions_30d": affiliate_conv,
+        "affiliate_revenue_usd": affiliate_revenue,
+        "ad_impressions_30d": ad_impressions_30d,
+        "ad_revenue_usd": ad_revenue_usd,
+        "total_revenue_usd": total_revenue,
+        "rpm_usd": rpm,
+        "top_broker": None,
+        "top_ticker": None,
     }
 
-    # שמור ל-metrics.json
     data = load_metrics()
     data["current"] = metrics
 
-    # הוסף snapshot חודשי
     current_month = date.today().strftime("%Y-%m")
-    existing_months = [m.get("month") for m in data.get("monthly", [])]
-    if current_month not in existing_months:
+    existing = [m.get("month") for m in data.get("monthly", [])]
+    if current_month not in existing:
         data.setdefault("monthly", []).append({"month": current_month, **metrics})
 
     save_metrics(data)
@@ -127,17 +77,13 @@ def run_growth_analysis(
 
 
 def check_targets(metrics: dict) -> list:
-    """בודק האם אנחנו על המסלול ליעדים."""
     try:
-        with open(METRICS_PATH, encoding="utf-8") as f:
-            data = json.load(f)
+        data = load_metrics()
         targets = data.get("targets", {})
     except Exception:
         return []
 
-    alerts = []
-    month_num = len([m for m in data.get("monthly", [])]) or 1
-
+    month_num = max(len(data.get("monthly", [])), 1)
     if month_num <= 1:
         target = targets.get("month_1", {})
     elif month_num <= 3:
@@ -147,47 +93,49 @@ def check_targets(metrics: dict) -> list:
     else:
         target = targets.get("month_12", {})
 
+    alerts = []
     if target:
-        mrr_target = target.get("mrr", 0)
-        users_target = target.get("paying_users", 0)
-        if metrics["mrr_usd"] < mrr_target * 0.5:
-            alerts.append(f"⚠️ MRR ${metrics['mrr_usd']:.0f} — רחוק מהיעד ${mrr_target} (חודש {month_num})")
-        if metrics["paying_users"] < users_target * 0.5:
-            alerts.append(f"⚠️ משתמשים משלמים {metrics['paying_users']} — יעד: {users_target}")
-        if metrics.get("trial_to_paying_rate", 0) < 0.15:
-            alerts.append(f"⚠️ trial->paying rate נמוך: {metrics['trial_to_paying_rate']:.1%} (יעד: 15%+)")
-        if metrics.get("churn_rate", 0) > 0.08:
-            alerts.append(f"⚠️ churn גבוה: {metrics['churn_rate']:.1%} (יעד: <8%)")
+        mau_target = target.get("mau", 0)
+        aff_target = target.get("affiliate_revenue", 0)
+        ad_target  = target.get("ad_revenue", 0)
 
+        if metrics["monthly_active_users"] < mau_target * 0.5:
+            alerts.append(f"MAU {metrics['monthly_active_users']} — יעד {mau_target} (חודש {month_num})")
+        if metrics["affiliate_revenue_usd"] < aff_target * 0.5:
+            alerts.append(f"Affiliate ${metrics['affiliate_revenue_usd']:.0f} — יעד ${aff_target}")
+        if metrics["affiliate_clicks_30d"] == 0:
+            alerts.append("אפס קליקים על ברוקרים — הוסף affiliate buttons לאפליקציה")
     return alerts
 
 
 def format_growth_report(metrics: dict) -> str:
     alerts = check_targets(metrics)
     lines = [
-        "=== דוח צמיחה ===",
+        "=== דוח צמיחה (Freemium) ===",
         f"תאריך: {metrics.get('date', 'N/A')}",
         "",
-        f"MRR:     ${metrics['mrr_usd']:,.0f}",
-        f"ARR:     ${metrics['arr_usd']:,.0f}",
+        f"MAU:         {metrics['monthly_active_users']:,}",
+        f"משתמשים חדשים: {metrics['new_users_30d']:,}",
         "",
-        f"משתמשים:   {metrics['total_users']} (Free: {metrics['free_users']} | Trial: {metrics['trial_users']} | Paying: {metrics['paying_users']})",
-        f"Churn:     {metrics['churn_rate']:.1%}/mo",
-        f"LTV:       ${metrics['ltv_usd']:,.0f}",
-        f"CAC:       ${metrics['cac_usd']:,.0f}",
-        f"LTV:CAC:   {metrics['ltv_cac_ratio']:.1f}x",
+        f"Affiliate clicks:   {metrics['affiliate_clicks_30d']}",
+        f"Affiliate conv:     {metrics['affiliate_conversions_30d']}",
+        f"Affiliate revenue:  ${metrics['affiliate_revenue_usd']:,.0f}",
         "",
-        f"Free->Trial:   {metrics['free_to_trial_rate']:.1%}",
-        f"Trial->Paying: {metrics['trial_to_paying_rate']:.1%}",
+        f"Ad impressions: {metrics['ad_impressions_30d']:,}",
+        f"Ad revenue:     ${metrics['ad_revenue_usd']:,.2f}",
+        f"RPM:            ${metrics['rpm_usd']:.2f}",
+        "",
+        f"Total revenue:  ${metrics['total_revenue_usd']:,.0f}",
     ]
     if alerts:
         lines.append("\n--- התראות ---")
-        lines.extend(alerts)
+        for a in alerts:
+            lines.append(f"  {a}")
     else:
         lines.append("\n✅ כל המדדים על המסלול")
     return "\n".join(lines)
 
 
 if __name__ == "__main__":
-    metrics = run_growth_analysis()
-    print(format_growth_report(metrics))
+    m = run_growth_analysis()
+    print(format_growth_report(m))

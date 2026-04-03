@@ -34,7 +34,7 @@
     </div>
     <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
       <a href="#features" class="hover:text-white transition">Features</a>
-      <a href="#pricing" class="hover:text-white transition">Pricing</a>
+      <a href="#brokers" class="hover:text-white transition">Brokers</a>
       <a href="#faq" class="hover:text-white transition">FAQ</a>
     </div>
     <div class="flex items-center gap-3">
@@ -171,79 +171,185 @@
   </div>
 </section>
 
-<!-- ─── PRICING ───────────────────────────────────────────────────────── -->
-<section id="pricing" class="py-20 px-6 bg-dark-800">
+<!-- ─── FREE FOREVER BANNER ────────────────────────────────────────────── -->
+<section class="py-12 px-6 bg-dark-800">
+  <div class="max-w-3xl mx-auto text-center card rounded-2xl p-10 glow">
+    <div class="text-5xl mb-4">🎉</div>
+    <h2 class="text-3xl font-bold text-white mb-3">100% Free. Forever.</h2>
+    <p class="text-gray-400 mb-6 text-lg">
+      TradeIQ is completely free — no subscriptions, no credit card, no limits.<br/>
+      We earn through broker partnerships when you open an account.
+    </p>
+    <a href="https://stock-calculator.streamlit.app" target="_blank"
+       class="inline-block bg-brand-500 hover:bg-brand-600 text-white font-semibold px-10 py-4 rounded-xl text-lg transition glow">
+      Open TradeIQ Free →
+    </a>
+    <p class="text-gray-600 text-sm mt-4">No signup required · Works instantly</p>
+  </div>
+</section>
+
+<!-- ─── AD SLOT (Google AdSense) ──────────────────────────────────────────── -->
+<section class="py-6 px-6 bg-dark-900">
   <div class="max-w-5xl mx-auto">
-    <h2 class="text-3xl font-bold text-white text-center mb-4">Simple pricing</h2>
-    <p class="text-gray-400 text-center mb-14">Start free. Upgrade when you're ready.</p>
+    <!-- הדבק כאן את קוד AdSense אחרי אישור -->
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script> -->
+    <div class="text-center text-gray-700 text-xs py-2">Advertisement</div>
+  </div>
+</section>
 
-    <div class="grid md:grid-cols-3 gap-6">
+<!-- ─── BROKER COMPARISON ─────────────────────────────────────────────────── -->
+<section id="brokers" class="py-20 px-6 bg-dark-800">
+  <div class="max-w-6xl mx-auto">
+    <h2 class="text-3xl font-bold text-white text-center mb-3">Choose your broker</h2>
+    <p class="text-gray-400 text-center mb-12 max-w-xl mx-auto">
+      TradeIQ works with any broker. Open an account with one of our partners — completely free.
+    </p>
 
-      <!-- Free -->
-      <div class="card rounded-2xl p-8 flex flex-col">
-        <div class="text-gray-400 text-sm font-medium uppercase tracking-wide mb-2">Free</div>
-        <div class="text-4xl font-bold text-white mb-1">$0</div>
-        <div class="text-gray-500 text-sm mb-8">Forever</div>
-        <ul class="space-y-3 text-sm text-gray-300 flex-1 mb-8">
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> R:R Calculator</li>
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> 10 news scans / day</li>
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> 5 stocks in portfolio</li>
-          <li class="flex gap-2"><span class="text-gray-600">✗</span> <span class="text-gray-600">Social Pulse</span></li>
-          <li class="flex gap-2"><span class="text-gray-600">✗</span> <span class="text-gray-600">Alerts</span></li>
-        </ul>
-        <a href="/register?plan=free"
-           class="block text-center border border-dark-600 hover:border-gray-500 text-gray-300 hover:text-white py-3 rounded-xl text-sm font-medium transition">
-          Start Free
-        </a>
-      </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
 
-      <!-- Pro (highlighted) -->
-      <div class="rounded-2xl p-8 flex flex-col relative glow"
-           style="background: linear-gradient(135deg, #161b22 0%, #1a2730 100%); border: 1px solid #22c55e50;">
-        <div class="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span class="bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-full">MOST POPULAR</span>
+      <!-- IBKR -->
+      <div class="card rounded-2xl p-6 flex flex-col hover:border-brand-500/50 transition" style="border-color:#22c55e40;">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🏦</span>
+            <div>
+              <div class="font-semibold text-white">Interactive Brokers</div>
+              <div class="text-xs text-gray-500">Best for serious traders</div>
+            </div>
+          </div>
+          <span class="bg-brand-500/20 text-brand-400 text-xs font-bold px-2 py-1 rounded-full">Recommended</span>
         </div>
-        <div class="text-brand-400 text-sm font-medium uppercase tracking-wide mb-2">Pro</div>
-        <div class="text-4xl font-bold text-white mb-1">$29</div>
-        <div class="text-gray-500 text-sm mb-8">/ month</div>
-        <ul class="space-y-3 text-sm text-gray-300 flex-1 mb-8">
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> Everything in Free</li>
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> Unlimited news scans</li>
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> Social Pulse</li>
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> 50 stocks in portfolio</li>
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> 10 price alerts</li>
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> Excel export</li>
+        <ul class="text-sm text-gray-400 space-y-1 flex-1 mb-5">
+          <li>✓ TASE + NYSE + 150 markets</li>
+          <li>✓ Lowest commissions</li>
+          <li>✓ Professional tools</li>
+          <li>✓ No minimum deposit</li>
         </ul>
-        <a href="/checkout?plan=pro"
+        <a href="https://www.interactivebrokers.com/referral/arik123"
+           target="_blank" rel="noopener sponsored"
+           onclick="trackBroker('ibkr')"
            class="block text-center bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-xl text-sm font-semibold transition">
-          Get Pro →
+          Open IBKR Account →
         </a>
       </div>
 
-      <!-- Elite -->
-      <div class="card rounded-2xl p-8 flex flex-col">
-        <div class="text-gray-400 text-sm font-medium uppercase tracking-wide mb-2">Elite</div>
-        <div class="text-4xl font-bold text-white mb-1">$79</div>
-        <div class="text-gray-500 text-sm mb-8">/ month</div>
-        <ul class="space-y-3 text-sm text-gray-300 flex-1 mb-8">
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> Everything in Pro</li>
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> Real-time WebSocket alerts</li>
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> Full API access</li>
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> Unlimited portfolio</li>
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> Priority support</li>
-          <li class="flex gap-2"><span class="text-brand-400">✓</span> Personal onboarding</li>
+      <!-- eToro -->
+      <div class="card rounded-2xl p-6 flex flex-col hover:border-blue-500/30 transition">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🌐</span>
+            <div>
+              <div class="font-semibold text-white">eToro</div>
+              <div class="text-xs text-gray-500">Social trading platform</div>
+            </div>
+          </div>
+          <span class="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-1 rounded-full">Social</span>
+        </div>
+        <ul class="text-sm text-gray-400 space-y-1 flex-1 mb-5">
+          <li>✓ Copy top traders</li>
+          <li>✓ $50 minimum</li>
+          <li>✓ Easy to use</li>
+          <li>✓ Crypto + stocks</li>
         </ul>
-        <a href="/checkout?plan=elite"
-           class="block text-center border border-brand-500/50 hover:bg-brand-500/10 text-brand-400 hover:text-brand-300 py-3 rounded-xl text-sm font-medium transition">
-          Get Elite
+        <a href="https://www.etoro.com/referral/arik123"
+           target="_blank" rel="noopener sponsored"
+           onclick="trackBroker('etoro')"
+           class="block text-center border border-blue-500/40 hover:bg-blue-500/10 text-blue-400 py-3 rounded-xl text-sm font-medium transition">
+          Open eToro Account →
         </a>
+      </div>
+
+      <!-- Plus500 -->
+      <div class="card rounded-2xl p-6 flex flex-col hover:border-purple-500/30 transition">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">➕</span>
+            <div>
+              <div class="font-semibold text-white">Plus500</div>
+              <div class="text-xs text-gray-500">Israel-based CFD platform</div>
+            </div>
+          </div>
+          <span class="bg-purple-500/20 text-purple-400 text-xs font-bold px-2 py-1 rounded-full">ישראלי</span>
+        </div>
+        <ul class="text-sm text-gray-400 space-y-1 flex-1 mb-5">
+          <li>✓ Interface in Hebrew</li>
+          <li>✓ CFD on stocks & crypto</li>
+          <li>✓ Leverage trading</li>
+          <li>✓ $100 minimum</li>
+        </ul>
+        <a href="https://www.plus500.com/referral/arik123"
+           target="_blank" rel="noopener sponsored"
+           onclick="trackBroker('plus500')"
+           class="block text-center border border-purple-500/40 hover:bg-purple-500/10 text-purple-400 py-3 rounded-xl text-sm font-medium transition">
+          Open Plus500 Account →
+        </a>
+      </div>
+
+      <!-- Moomoo -->
+      <div class="card rounded-2xl p-6 flex flex-col hover:border-orange-500/30 transition">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🐄</span>
+            <div>
+              <div class="font-semibold text-white">Moomoo</div>
+              <div class="text-xs text-gray-500">Advanced analytics + trading</div>
+            </div>
+          </div>
+          <span class="bg-orange-500/20 text-orange-400 text-xs font-bold px-2 py-1 rounded-full">Analytics</span>
+        </div>
+        <ul class="text-sm text-gray-400 space-y-1 flex-1 mb-5">
+          <li>✓ Level 2 market data</li>
+          <li>✓ Free to open</li>
+          <li>✓ Advanced charts</li>
+          <li>✓ US stocks focus</li>
+        </ul>
+        <a href="https://j.moomoo.com/referral/arik123"
+           target="_blank" rel="noopener sponsored"
+           onclick="trackBroker('moomoo')"
+           class="block text-center border border-orange-500/40 hover:bg-orange-500/10 text-orange-400 py-3 rounded-xl text-sm font-medium transition">
+          Open Moomoo Account →
+        </a>
+      </div>
+
+      <!-- Trading212 -->
+      <div class="card rounded-2xl p-6 flex flex-col hover:border-brand-500/30 transition">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">📱</span>
+            <div>
+              <div class="font-semibold text-white">Trading 212</div>
+              <div class="text-xs text-gray-500">Zero commission stocks</div>
+            </div>
+          </div>
+          <span class="bg-brand-500/20 text-brand-400 text-xs font-bold px-2 py-1 rounded-full">Free</span>
+        </div>
+        <ul class="text-sm text-gray-400 space-y-1 flex-1 mb-5">
+          <li>✓ Zero commissions</li>
+          <li>✓ Fractional shares</li>
+          <li>✓ Start with $1</li>
+          <li>✓ Great mobile app</li>
+        </ul>
+        <a href="https://www.trading212.com/referral/arik123"
+           target="_blank" rel="noopener sponsored"
+           onclick="trackBroker('trading212')"
+           class="block text-center border border-brand-500/40 hover:bg-brand-500/10 text-brand-400 py-3 rounded-xl text-sm font-medium transition">
+          Open Trading 212 →
+        </a>
+      </div>
+
+      <!-- Disclaimer card -->
+      <div class="card rounded-2xl p-6 flex flex-col justify-center items-center text-center">
+        <div class="text-3xl mb-3">⚖️</div>
+        <p class="text-gray-500 text-sm">
+          TradeIQ may earn a commission when you open an account through our links.
+          This does not affect our analysis or recommendations.
+        </p>
+        <p class="text-gray-600 text-xs mt-3">Trading involves risk. Not financial advice.</p>
       </div>
 
     </div>
-
-    <p class="text-center text-gray-500 text-sm mt-8">
-      All plans include 14-day free trial · Cancel anytime · No credit card for Free plan
-    </p>
   </div>
 </section>
 
@@ -325,6 +431,23 @@
     <div class="text-gray-600 text-sm">© 2026 TradeIQ. Not financial advice.</div>
   </div>
 </footer>
+
+<script>
+// Affiliate click tracking
+function trackBroker(brokerId) {
+  try {
+    // שמור קליק ב-localStorage לניתוח
+    const key = 'tradeiq_clicks';
+    const clicks = JSON.parse(localStorage.getItem(key) || '[]');
+    clicks.push({ broker: brokerId, ts: new Date().toISOString() });
+    localStorage.setItem(key, JSON.stringify(clicks.slice(-100)));
+    // שלח ל-GA אם קיים
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'broker_click', { broker: brokerId });
+    }
+  } catch(e) {}
+}
+</script>
 
 </body>
 </html>
