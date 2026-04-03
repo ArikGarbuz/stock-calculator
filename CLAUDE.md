@@ -146,7 +146,7 @@ stock calculator/
 streamlit run trade_app.py
 ```
 
-## גרסה נוכחית: v2.6 (2026-04-03)
+## גרסה נוכחית: v3.1 (2026-04-03)
 
 ## תכונות עיקריות (trade_app.py)
 - **Wide layout** — sidebar watchlist + main calculator
@@ -161,9 +161,13 @@ streamlit run trade_app.py
 - **GO/NO-GO** — R:R >= 2.0 → GO ✅, עם progress bar ו-glow animation
 - **Volume Strip** — volume היום, 3M avg, 6M avg, % vs average
 - **Price Trends** — שינוי % ב-30D/60D/90D
+- **support_resistance.py** — 10 מדדי S/R (Pivot, Fibonacci, SMA, BB, VWAP, Volume POC)
+- **evaluate_trade_v3()** — Account Size, % Investing, LONG/SHORT, Income Forecast, Exit Tiers
+- **RSI(14) + MACD badge** — בdata strip, עם צבע דינמי (overbought/oversold/neutral)
+- **Auto-refresh** — כל 60 שניות כשהשוק פתוח (streamlit-autorefresh)
 
-## Innovation Index: 78/100
-**הבא:** RSI badge (+2), auto-refresh בשוק פתוח (+2), CSV export (+1) → 83/100
+## Innovation Index: 86/100
+**הבא:** CSV export (+1), S/R lines על גרף (+1), Earnings Date (+1) → 89/100
 
 ## Deployment
 - **Streamlit Cloud:** https://stock-calculator.streamlit.app/

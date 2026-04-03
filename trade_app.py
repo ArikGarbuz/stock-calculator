@@ -12,6 +12,7 @@ from datetime import datetime
 
 from data.market_data import get_current_quote, get_price_history, get_company_name, get_market_status
 from calculators.trade_calc import calc_atr, evaluate_trade, evaluate_trade_v3
+from calculators.technical_calc import calc_rsi, calc_macd
 from calculators.sentiment_scorer import combine_signals
 from calculators.support_resistance import get_support_resistance
 from agents.trade_calculator import parse_price_from_text, auto_suggest_stop
@@ -21,6 +22,11 @@ from data.user_data import (
     load_watchlist, save_watchlist, add_to_watchlist, remove_from_watchlist,
     load_journal, save_trade, delete_trade, journal_summary
 )
+
+try:
+    from streamlit_autorefresh import st_autorefresh
+except ImportError:
+    st_autorefresh = None
 
 # ─── הגדרות ─────────────────────────────────────────────────────────────────
 st.set_page_config(page_title="מחשבון עסקה", page_icon="🧮", layout="wide")
@@ -832,6 +838,24 @@ except Exception as e:
     st.error(f"Error loading data for **{ticker}**: {e}")
     st.stop()
 
+# ── RSI + MACD ────────────────────────────────────────────────────────────────
+try:
+    _rsi_series = calc_rsi(df6m["Close"].squeeze())
+    _rsi_val    = round(float(_rsi_series.dropna().iloc[-1]), 1)
+    _macd_data  = calc_macd(df6m["Close"].squeeze())
+    _macd_hist  = float(_macd_data["histogram"].dropna().iloc[-1])
+except Exception:
+    _rsi_val = None
+    _macd_hist = None
+
+_rsi_color  = "#E05F5F" if (_rsi_val or 50) >= 70 else "#2DD4A0" if (_rsi_val or 50) <= 30 else "#C8A96E"
+_macd_color = "#2DD4A0" if (_macd_hist or 0) >= 0 else "#E05F5F"
+_macd_sign  = "+" if (_macd_hist or 0) >= 0 else "-"
+
+# ── Auto-refresh when market is open ─────────────────────────────────────────
+if st_autorefresh and mkt.get("is_open"):
+    st_autorefresh(interval=60000, key="live_refresh")
+
 currency   = "₪" if ticker.endswith(".TA") else "$"
 price      = quote["price"]
 change     = quote["change"]
@@ -1015,6 +1039,19 @@ st.markdown(
     + _trend_html(trend_30, "30D Trend")
     + _trend_html(trend_60, "60D Trend")
     + _trend_html(trend_90, "90D Trend")
+
+    + (
+        f'<div class="data-strip-item">'
+        f'<div class="ds-label">RSI 14</div>'
+        f'<div class="ds-main" style="color:{_rsi_color};">{_rsi_val if _rsi_val is not None else "—"}</div>'
+        f'</div>'
+        f'<div class="data-strip-item">'
+        f'<div class="ds-label">MACD</div>'
+        f'<div class="ds-main" style="color:{_macd_color};">'
+        + (f'{_macd_sign}{abs(_macd_hist):.2f}' if _macd_hist is not None else '—') +
+        f'</div>'
+        f'</div>'
+    )
 
     + f'</div>',
     unsafe_allow_html=True
