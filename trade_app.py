@@ -6,6 +6,14 @@ import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 
 import streamlit as st
+
+# Bridge: st.secrets → os.environ (for sub-agents that use os.getenv)
+try:
+    for _k, _v in st.secrets.items():
+        if _k not in os.environ:
+            os.environ[_k] = str(_v)
+except Exception:
+    pass
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from datetime import datetime
@@ -1076,37 +1084,119 @@ _df_chart = {"5D": df5d, "1M": _load_history_1m(ticker), "3M": df6m}.get(_chart_
 _close_c = _df_chart["Close"].squeeze()
 _sma20   = _close_c.rolling(20).mean()
 
-# Volume colors
-_vol_c  = _df_chart["Volume"].squeeze()
-_c_open = _df_chart["Open"].squeeze()
-_c_cls  = _df_chart["Close"].squeeze()
-_vol_colors = ["rgba(45,212,160,0.33)" if c >= o else "rgba(224,95,95,0.33)" for c, o in zip(_c_cls, _c_open)]
+# Volume colors + avg
+_vol_c      = _df_chart["Volume"].squeeze()
+_c_open     = _df_chart["Open"].squeeze()
+_c_cls      = _df_chart["Close"].squeeze()
+_vol_colors = [
+    "rgba(45,212,160,0.55)" if c >= o else "rgba(224,95,95,0.55)"
+    for c, o in zip(_c_cls, _c_open)
+]
+_vol_avg = float(_vol_c.mean())
 
-fig_mini = make_subplots(rows=2, cols=1, shared_xaxes=True,
-                         row_heights=[0.72, 0.28], vertical_spacing=0.02)
+def _vol_tick_fmt(v):
+    if v >= 1_000_000: return f"{v/1_000_000:.1f}M"
+    if v >= 1_000:     return f"{v/1_000:.0f}K"
+    return str(int(v))
+
+fig_mini = make_subplots(
+    rows=2, cols=1, shared_xaxes=True,
+    row_heights=[0.67, 0.33], vertical_spacing=0.01,
+)
+
+# ── Candlestick ──────────────────────────────────────────────────────────────
 fig_mini.add_trace(go.Candlestick(
     x=_df_chart.index,
     open=_df_chart["Open"].squeeze(), high=_df_chart["High"].squeeze(),
     low=_df_chart["Low"].squeeze(), close=_c_cls,
-    increasing_line_color="#2DD4A0", decreasing_line_color="#E05F5F",
-    showlegend=False, name="מחיר"
+    increasing_line_color="#2DD4A0", increasing_fillcolor="#2DD4A0",
+    decreasing_line_color="#E05F5F", decreasing_fillcolor="#E05F5F",
+    line=dict(width=1),
+    showlegend=False, name="Price",
+    hovertext=[
+        f"O: {currency}{o:,.2f}  H: {currency}{h:,.2f}  L: {currency}{l:,.2f}  C: {currency}{c:,.2f}"
+        for o, h, l, c in zip(
+            _df_chart["Open"].squeeze(), _df_chart["High"].squeeze(),
+            _df_chart["Low"].squeeze(), _c_cls
+        )
+    ],
+    hoverinfo="text+x",
 ), row=1, col=1)
+
+# ── SMA-20 ───────────────────────────────────────────────────────────────────
 fig_mini.add_trace(go.Scatter(
     x=_df_chart.index, y=_sma20,
-    line=dict(color="#C8A96E", width=1), opacity=0.7,
-    showlegend=False, name="SMA 20"
+    line=dict(color="#C8A96E", width=1.5, dash="dot"), opacity=0.85,
+    showlegend=False, name="SMA 20",
+    hovertemplate="SMA 20: %{y:,.2f}<extra></extra>",
 ), row=1, col=1)
+
+# ── Current price dotted line ─────────────────────────────────────────────────
+fig_mini.add_hline(
+    y=price, line_color="#C8A96E44", line_width=1, line_dash="dot",
+    row=1, col=1,
+)
+
+# ── Volume bars ───────────────────────────────────────────────────────────────
 fig_mini.add_trace(go.Bar(
-    x=_df_chart.index, y=_vol_c, marker_color=_vol_colors,
-    showlegend=False, name="נפח"
+    x=_df_chart.index, y=_vol_c,
+    marker_color=_vol_colors, marker_line_width=0,
+    showlegend=False, name="Volume",
+    hovertemplate="%{x|%b %d}<br><b>%{customdata}</b><extra></extra>",
+    customdata=[_vol_tick_fmt(v) for v in _vol_c],
 ), row=2, col=1)
+
+# ── Volume average line ───────────────────────────────────────────────────────
+fig_mini.add_hline(
+    y=_vol_avg, line_color="#C8A96E", line_width=1.2, line_dash="dash",
+    annotation_text=f"Avg {_vol_tick_fmt(_vol_avg)}",
+    annotation_position="right",
+    annotation_font=dict(color="#C8A96E", size=10, family="Heebo"),
+    row=2, col=1,
+)
+
+# ── Layout ────────────────────────────────────────────────────────────────────
 fig_mini.update_layout(
-    template="plotly_dark", paper_bgcolor="#07070f", plot_bgcolor="#0e0e1c",
-    height=260, margin=dict(l=0, r=0, t=6, b=0),
-    xaxis=dict(showgrid=False, rangeslider_visible=False, tickfont=dict(color="#6E6E92", size=10)),
-    xaxis2=dict(showgrid=False, tickfont=dict(color="#6E6E92", size=9)),
-    yaxis=dict(showgrid=True, gridcolor="#1a1a30", side="right", tickfont=dict(color="#6E6E92", size=10)),
-    yaxis2=dict(showgrid=False, side="right", tickfont=dict(color="#38384E", size=9)),
+    template="plotly_dark",
+    paper_bgcolor="#07070f",
+    plot_bgcolor="#0d0d1e",
+    height=320,
+    margin=dict(l=0, r=68, t=4, b=0),
+    hovermode="x unified",
+    hoverlabel=dict(
+        bgcolor="#14142a", bordercolor="#2a2a48",
+        font=dict(color="#EDE8E0", size=12, family="Heebo"),
+    ),
+    xaxis=dict(
+        showgrid=False, rangeslider_visible=False,
+        tickfont=dict(color="#6E6E92", size=10),
+        showspikes=True, spikecolor="#3a3a58", spikemode="across",
+        spikethickness=1, spikedash="dot",
+    ),
+    xaxis2=dict(
+        showgrid=False,
+        tickfont=dict(color="#6E6E92", size=9),
+    ),
+    yaxis=dict(
+        showgrid=True, gridcolor="#18182c", gridwidth=1,
+        side="right",
+        tickfont=dict(color="#9090B8", size=10),
+        tickprefix=currency, tickformat=",.2f",
+        zeroline=False,
+        showspikes=True, spikecolor="#3a3a58", spikethickness=1,
+    ),
+    yaxis2=dict(
+        showgrid=True, gridcolor="#12121e", gridwidth=1,
+        side="right",
+        tickfont=dict(color="#6E6E92", size=9),
+        tickvals=[_vol_avg * 0.5, _vol_avg, _vol_avg * 1.5],
+        ticktext=[
+            _vol_tick_fmt(_vol_avg * 0.5),
+            _vol_tick_fmt(_vol_avg),
+            _vol_tick_fmt(_vol_avg * 1.5),
+        ],
+        zeroline=False,
+    ),
 )
 st.plotly_chart(fig_mini, use_container_width=True, key="mini_chart")
 
