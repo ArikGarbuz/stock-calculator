@@ -778,13 +778,6 @@ if st.session_state["pnl_open"]:
         import pandas as pd
 
         # Fetch live prices for all unique tickers
-        @st.cache_data(ttl=60)
-        def _pnl_live_price(t):
-            try:
-                return get_current_quote(t).get("price", 0)
-            except Exception:
-                return 0
-
         _tickers_unique = list({e["ticker"] for e in _pnl})
         _live = {_tk: _pnl_live_price(_tk) for _tk in _tickers_unique}
 
@@ -915,6 +908,13 @@ if load_btn and ticker_input.strip():
 ticker = st.session_state["calc_ticker"]
 
 # ─── טעינת נתוני שוק ─────────────────────────────────────────────────────────
+@st.cache_data(ttl=60)
+def _pnl_live_price(t):
+    try:
+        return get_current_quote(t).get("price", 0)
+    except Exception:
+        return 0
+
 @st.cache_data(ttl=30)
 def _load_quote(t):
     return get_current_quote(t)
