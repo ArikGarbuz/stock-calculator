@@ -23,6 +23,7 @@ env/
 # Data (user-specific, not committed)
 data/watchlist.json
 data/trade_journal.json
+data/pnl_sheet.json
 data/sales/leads.json
 data/sales/pipeline.json
 data/sales/pricing.json

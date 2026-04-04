@@ -28,7 +28,8 @@ from agents.news_scout import get_news
 from agents.social_pulse import get_social_pulse
 from data.user_data import (
     load_watchlist, save_watchlist, add_to_watchlist, remove_from_watchlist,
-    load_journal, save_trade, delete_trade, journal_summary
+    load_journal, save_trade, delete_trade, journal_summary,
+    load_pnl_sheet, save_pnl_entry, delete_pnl_entry, update_pnl_shares,
 )
 
 try:
@@ -570,6 +571,8 @@ if "watchlist" not in st.session_state:
     st.session_state["watchlist"] = load_watchlist()
 if "journal_open" not in st.session_state:
     st.session_state["journal_open"] = False
+if "pnl_open" not in st.session_state:
+    st.session_state["pnl_open"] = False
 if "last_result" not in st.session_state:
     st.session_state["last_result"] = None
 
@@ -650,6 +653,11 @@ with st.sidebar:
     st.markdown("<div style='margin-top:8px;'></div>", unsafe_allow_html=True)
     if st.button("Open Journal", use_container_width=True, key="open_journal"):
         st.session_state["journal_open"] = True
+        st.session_state["pnl_open"] = False
+        st.rerun()
+    if st.button("📊 PnL Sheet", use_container_width=True, key="open_pnl"):
+        st.session_state["pnl_open"] = True
+        st.session_state["journal_open"] = False
         st.rerun()
 
     st.markdown('<div style="height:60px;"></div>', unsafe_allow_html=True)
@@ -742,6 +750,107 @@ if st.session_state["journal_open"]:
                     delete_trade(_del_id.strip())
                     st.success("Entry deleted.")
                     st.rerun()
+
+    st.stop()
+
+# ─── PnL Sheet View (full-page swap) ─────────────────────────────────────────
+if st.session_state["pnl_open"]:
+    st.markdown(
+        '<div class="top-bar">'
+        '<span class="top-bar-brand">Trading Desk</span>'
+        '<span style="font-size:20px;font-weight:900;color:#EDE8E0;">📊 PnL Sheet</span>'
+        '</div>',
+        unsafe_allow_html=True
+    )
+    if st.button("← Back to Calculator", key="close_pnl"):
+        st.session_state["pnl_open"] = False
+        st.rerun()
+
+    _pnl = load_pnl_sheet()
+    if not _pnl:
+        st.markdown(
+            '<div style="text-align:center;padding:48px;color:#38384E;font-size:14px;">'
+            'No data yet.<br/>Load a ticker to start tracking prices.'
+            '</div>',
+            unsafe_allow_html=True
+        )
+    else:
+        import pandas as pd
+
+        # Fetch live prices for all unique tickers
+        @st.cache_data(ttl=60)
+        def _pnl_live_price(t):
+            try:
+                return get_current_quote(t).get("price", 0)
+            except Exception:
+                return 0
+
+        _tickers_unique = list({e["ticker"] for e in _pnl})
+        _live = {_tk: _pnl_live_price(_tk) for _tk in _tickers_unique}
+
+        # Build display rows
+        rows = []
+        for e in _pnl:
+            cur = _live.get(e["ticker"], 0)
+            entry = e["entry_price"]
+            shares = e.get("shares", 100)
+            pnl_amt = round((cur - entry) * shares, 2) if cur > 0 else 0.0
+            pnl_pct = round((cur - entry) / entry * 100, 2) if cur > 0 and entry > 0 else 0.0
+            rows.append({
+                "_id": e["id"],
+                "Ticker": e["ticker"],
+                "Company": e.get("company", ""),
+                "Scan Date": e["scan_date"],
+                "Entry $": entry,
+                "Now $": cur if cur > 0 else 0.0,
+                "Change %": pnl_pct,
+                "Shares": shares,
+                "PnL $": pnl_amt,
+            })
+
+        df_pnl = pd.DataFrame(rows)
+
+        edited = st.data_editor(
+            df_pnl.drop(columns=["_id"]),
+            column_config={
+                "Shares": st.column_config.NumberColumn(min_value=1, step=1),
+                "Change %": st.column_config.NumberColumn(format="%.2f%%"),
+                "PnL $": st.column_config.NumberColumn(format="$%.2f"),
+                "Entry $": st.column_config.NumberColumn(format="$%.4f"),
+                "Now $": st.column_config.NumberColumn(format="$%.4f"),
+            },
+            disabled=["Ticker", "Company", "Scan Date", "Entry $", "Now $", "Change %", "PnL $"],
+            hide_index=True,
+            use_container_width=True,
+            key="pnl_editor",
+        )
+
+        # Persist shares edits
+        for i, row in edited.iterrows():
+            new_shares = int(row["Shares"]) if row["Shares"] else rows[i]["Shares"]
+            if new_shares != rows[i]["Shares"]:
+                update_pnl_shares(rows[i]["_id"], new_shares)
+
+        st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+        _del_col1, _del_col2 = st.columns([3, 1])
+        with _del_col1:
+            _del_opts = [""] + [f"{r['Ticker']} — {r['Scan Date']}" for r in rows]
+            _del_sel = st.selectbox("Select entry to delete", _del_opts, key="pnl_del_sel",
+                                    label_visibility="collapsed")
+        with _del_col2:
+            if st.button("🗑 Delete", key="pnl_delete_btn", type="primary"):
+                if _del_sel:
+                    _del_idx = _del_opts.index(_del_sel) - 1
+                    delete_pnl_entry(rows[_del_idx]["_id"])
+                    st.rerun()
+
+        import io as _io2, csv as _csv2
+        _buf2 = _io2.StringIO()
+        _wr2 = _csv2.DictWriter(_buf2, fieldnames=["Ticker", "Company", "Scan Date", "Entry $", "Now $", "Change %", "Shares", "PnL $"])
+        _wr2.writeheader()
+        _wr2.writerows([{k: v for k, v in r.items() if k != "_id"} for r in rows])
+        st.download_button("📥 Export CSV", _buf2.getvalue(), "pnl_sheet.csv", "text/csv",
+                           use_container_width=True)
 
     st.stop()
 
@@ -874,6 +983,19 @@ try:
 except Exception as e:
     st.error(f"Error loading data for **{ticker}**: {e}")
     st.stop()
+
+# ── Auto-save PnL snapshot (once per ticker per minute to avoid duplicates from auto-refresh)
+try:
+    _pnl_now_min = datetime.now().strftime("%Y-%m-%d %H:%M")
+    _pnl_recent = load_pnl_sheet()
+    _pnl_already = any(
+        e["ticker"] == ticker and e["scan_date"] == _pnl_now_min
+        for e in _pnl_recent[:30]
+    )
+    if not _pnl_already and quote.get("price", 0) > 0:
+        save_pnl_entry(ticker, company, quote["price"])
+except Exception:
+    pass
 
 # ── RSI + MACD ────────────────────────────────────────────────────────────────
 try:

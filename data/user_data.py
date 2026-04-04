@@ -92,3 +92,42 @@ def journal_summary() -> dict:
         "avg_rr":        round(avg_rr, 2),
         "best_rr":       round(best, 2),
     }
+
+
+# ── PnL Sheet ───────────────────────────────────────────────────────────────────
+
+PNL_FILE = Path(__file__).parent / "pnl_sheet.json"
+
+
+def load_pnl_sheet() -> list[dict]:
+    """Returns list of PnL snapshots, newest first."""
+    entries = _read(PNL_FILE)
+    return sorted(entries, key=lambda x: x.get("scan_date", ""), reverse=True)
+
+
+def save_pnl_entry(ticker: str, company: str, entry_price: float) -> None:
+    """Saves a price snapshot when a ticker is loaded."""
+    entries = _read(PNL_FILE)
+    entries.append({
+        "id": uuid.uuid4().hex[:8],
+        "ticker": ticker.upper(),
+        "company": company,
+        "scan_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "entry_price": round(float(entry_price), 4),
+        "shares": 100,
+    })
+    _write(PNL_FILE, entries)
+
+
+def delete_pnl_entry(entry_id: str) -> None:
+    entries = [e for e in _read(PNL_FILE) if e.get("id") != entry_id]
+    _write(PNL_FILE, entries)
+
+
+def update_pnl_shares(entry_id: str, shares: int) -> None:
+    entries = _read(PNL_FILE)
+    for e in entries:
+        if e.get("id") == entry_id:
+            e["shares"] = shares
+            break
+    _write(PNL_FILE, entries)
