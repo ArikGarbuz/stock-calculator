@@ -718,6 +718,19 @@ if st.session_state["journal_open"]:
             use_container_width=True, height=420
         )
 
+        import csv, io as _io
+        _csv_buf = _io.StringIO()
+        _csv_writer = csv.DictWriter(_csv_buf, fieldnames=_journal[0].keys())
+        _csv_writer.writeheader()
+        _csv_writer.writerows(_journal)
+        st.download_button(
+            "📥 Export Journal CSV",
+            _csv_buf.getvalue(),
+            file_name="trade_journal.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
         st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
         st.markdown('<div style="font-size:11px;color:#6E6E92;margin-bottom:8px;">Delete a trade entry by ID:</div>', unsafe_allow_html=True)
         _del_col1, _del_col2 = st.columns([3, 1])
@@ -817,6 +830,21 @@ def _load_market_status(t):
 def _load_sr(t):
     return get_support_resistance(t)
 
+@st.cache_data(ttl=3600)
+def _load_earnings(t):
+    try:
+        import yfinance as yf
+        import pandas as pd
+        cal = yf.Ticker(t).calendar
+        if cal is not None and not cal.empty:
+            dates = cal.loc["Earnings Date"] if "Earnings Date" in cal.index else None
+            if dates is not None:
+                d = pd.to_datetime(dates.iloc[0]) if hasattr(dates, "iloc") else pd.to_datetime(dates)
+                return d.strftime("%b %d")
+    except Exception:
+        pass
+    return None
+
 def _fmt_vol(v):
     """פורמט נפח: 1.2M / 450K / 12K"""
     if v >= 1_000_000:
@@ -835,13 +863,14 @@ def _trend_pct(df_close, days):
     return (now - past) / past * 100 if past else None
 
 try:
-    quote   = _load_quote(ticker)
-    df5d    = _load_history(ticker)
-    df6m    = _load_history_6m(ticker)
-    atr_val = calc_atr(df5d)
-    sr_data = _load_sr(ticker)
-    company = get_company_name(ticker)
-    mkt     = _load_market_status(ticker)
+    quote          = _load_quote(ticker)
+    df5d           = _load_history(ticker)
+    df6m           = _load_history_6m(ticker)
+    atr_val        = calc_atr(df5d)
+    sr_data        = _load_sr(ticker)
+    company        = get_company_name(ticker)
+    mkt            = _load_market_status(ticker)
+    _earnings_date = _load_earnings(ticker)
 except Exception as e:
     st.error(f"Error loading data for **{ticker}**: {e}")
     st.stop()
@@ -1021,6 +1050,11 @@ st.markdown(
     f'<div class="stat-value gold">{currency}{atr_val:,.2f}</div>'
     f'</div>'
 
+    f'<div class="price-strip-item">'
+    f'<div class="price-strip-label">Next Earnings</div>'
+    f'<div class="stat-value gold">{_earnings_date or "—"}</div>'
+    f'</div>'
+
     + _range_bar_html(year_low, year_high, price) +
 
     f'</div>'
@@ -1154,6 +1188,18 @@ fig_mini.add_hline(
     annotation_font=dict(color="#C8A96E", size=10, family="Heebo"),
     row=2, col=1,
 )
+
+# ── S/R lines on price chart ──────────────────────────────────────────────────
+_sr_levels_chart = (sr_data or {}).get("levels", [])
+if _sr_levels_chart:
+    _res_lines = [l for l in _sr_levels_chart if l.get("type") == "resistance"][:3]
+    _sup_lines = [l for l in _sr_levels_chart if l.get("type") == "support"][-3:]
+    for _rl in _res_lines:
+        fig_mini.add_hline(y=_rl["price"], line_color="#E05F5F", line_width=0.8,
+                           line_dash="dot", opacity=0.45, row=1, col=1)
+    for _sl in _sup_lines:
+        fig_mini.add_hline(y=_sl["price"], line_color="#2DD4A0", line_width=0.8,
+                           line_dash="dot", opacity=0.45, row=1, col=1)
 
 # ── Layout ────────────────────────────────────────────────────────────────────
 fig_mini.update_layout(
