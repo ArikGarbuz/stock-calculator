@@ -77,19 +77,20 @@
 
 ### מה נעשה
 
-| גרסה | שינוי |
-|------|--------|
-| v3.4 RC | `trade_app.py` | Chart section moved from position 4 (after metrics) to position 6 (bottom of page, before S/R panel) |
+| שלב | שינוי |
+|-----|--------|
+| Pass 1 | Chart moved from position 4 → position 6 (before S/R panel) |
+| Pass 2 | **Final swap:** Chart (pos 5) ↔ S/R Panel (pos 6) |
 
-### פרטי הארגון המחדש
+### סדר עמוד סופי - v3.4
 
-**סדר עמוד חדש:**
 1. **Metrics** — RSI(14), MACD, data strips (price, high/low, ATR, volume, trends)
 2. **AI Agents** — News Scout, Social Pulse, Sentiment gauge
 3. **Trade Calculator** — Entry/Stop/Target inputs + R:R calculation + GO/NO-GO verdict
 4. **Results** — Income forecast, metric summary, breakdown chart, save to journal
-5. **Chart** — Price chart (5D/1M/3M) with candlestick, SMA-20, volume, S/R lines (moved here ↓)
-6. **Support/Resistance Panel** — 10 metrics: Pivot, Fibonacci, SMA, Bollinger Bands, VWAP, Volume POC
+5. **Support/Resistance Panel** ← moved up (line 1735)
+6. **Chart** ← moved down (line 1794): 5D/1M/3M candlestick + SMA-20 + volume + S/R lines
+7. **Footer**
 
 **קבצים שנשתנו:** `trade_app.py` (סדר נושאים, ללא שינוי לוגיקה)
 

@@ -1732,6 +1732,65 @@ if calc_btn:
         except ValueError as e:
             st.error(f"Calculation error: {e}")
 
+# ─── פאנל תמיכה/התנגדות ───────────────────────────────────────────────────────
+st.markdown("---")
+_sr_levels = (sr_data or {}).get("levels", [])
+if _sr_levels:
+    _sr_price = (sr_data or {}).get("current_price") or price
+    _rows_sr  = ""
+    _cp_inserted = False
+    for _lvl in _sr_levels:
+        _lp = _lvl["price"]
+        _lt = _lvl.get("type", "neutral")
+        _lg = _lvl.get("group", "")
+        _ln = _lvl["name"]
+        if not _cp_inserted and _lp < _sr_price:
+            _cp_inserted = True
+            _rows_sr += (
+                f'<div style="display:flex;justify-content:space-between;align-items:center;'
+                f'padding:8px 12px;background:#C8A96E12;border-radius:6px;margin:5px 0;">'
+                f'<span style="font-size:12px;font-weight:700;color:#C8A96E;">◆ CURRENT PRICE</span>'
+                f'<span style="font-size:15px;font-weight:900;color:#C8A96E;">{currency}{_sr_price:,.2f}</span>'
+                f'<span style="font-size:11px;color:#C8A96E88;">NOW</span>'
+                f'</div>'
+            )
+        _color = "#E05F5F" if _lt == "resistance" else "#2DD4A0" if _lt == "support" else "#C8A96E"
+        _lbl   = "התנגדות" if _lt == "resistance" else "תמיכה" if _lt == "support" else "—"
+        _rows_sr += (
+            f'<div style="display:flex;justify-content:space-between;align-items:center;'
+            f'padding:5px 4px;border-bottom:1px solid #16162a;">'
+            f'<div style="display:flex;align-items:center;gap:8px;min-width:0;">'
+            f'<span style="color:{_color};font-size:9px;">●</span>'
+            f'<span style="font-size:13px;color:#EDE8E0;white-space:nowrap;">{_ln}</span>'
+            f'<span style="font-size:10px;color:#6E6E92;background:#14142a;border-radius:4px;'
+            f'padding:1px 6px;white-space:nowrap;">{_lg}</span>'
+            f'</div>'
+            f'<div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">'
+            f'<span style="font-size:15px;font-weight:700;color:{_color};">{currency}{_lp:,.2f}</span>'
+            f'<span style="font-size:11px;color:{_color};min-width:56px;text-align:right;">{_lbl}</span>'
+            f'</div>'
+            f'</div>'
+        )
+    if not _cp_inserted:
+        _rows_sr = (
+            f'<div style="display:flex;justify-content:space-between;align-items:center;'
+            f'padding:8px 12px;background:#C8A96E12;border-radius:6px;margin:0 0 6px 0;">'
+            f'<span style="font-size:12px;font-weight:700;color:#C8A96E;">◆ CURRENT PRICE</span>'
+            f'<span style="font-size:15px;font-weight:900;color:#C8A96E;">{currency}{_sr_price:,.2f}</span>'
+            f'<span style="font-size:11px;color:#C8A96E88;">NOW</span>'
+            f'</div>'
+        ) + _rows_sr
+    st.markdown(
+        f'<div style="background:#10101e;border:1px solid #2a2a48;border-radius:12px;'
+        f'padding:18px 22px;margin:12px 0 16px 0;">'
+        f'<div style="font-size:11px;font-weight:700;color:#C8A96E;letter-spacing:2px;'
+        f'text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;'
+        f'border-bottom:1px solid #2a2a48;">Support &amp; Resistance — 10 מדדים</div>'
+        f'{_rows_sr}'
+        f'</div>',
+        unsafe_allow_html=True
+    )
+
 # ─── גרף מחיר עם tabs ────────────────────────────────────────────────────────
 _range_labels = {"5D": "5 Days", "1M": "1 Month", "3M": "3 Months"}
 tab_cols = st.columns(len(_range_labels) + 4)  # push tabs to the right
@@ -1831,7 +1890,7 @@ if _sr_levels_chart:
         fig_mini.add_hline(y=_rl["price"], line_color="#E05F5F", line_width=0.8,
                            line_dash="dot", opacity=0.45, row=1, col=1)
     for _sl in _sup_lines:
-        fig_mini.add_hline(y=_sl["price"], line_color="#2DD4A0", line_width=0.8,
+        fig_mini.add_hline(y=_sl["price"], line_color="#2DD4A0", line_width=0.8",
                            line_dash="dot", opacity=0.45, row=1, col=1)
 
 # ── Layout ────────────────────────────────────────────────────────────────────
@@ -1878,65 +1937,6 @@ fig_mini.update_layout(
     ),
 )
 st.plotly_chart(fig_mini, use_container_width=True, key="mini_chart")
-
-# ─── פאנל תמיכה/התנגדות (תחתית העמוד) ───────────────────────────────────────
-st.markdown("---")
-_sr_levels = (sr_data or {}).get("levels", [])
-if _sr_levels:
-    _sr_price = (sr_data or {}).get("current_price") or price
-    _rows_sr  = ""
-    _cp_inserted = False
-    for _lvl in _sr_levels:
-        _lp = _lvl["price"]
-        _lt = _lvl.get("type", "neutral")
-        _lg = _lvl.get("group", "")
-        _ln = _lvl["name"]
-        if not _cp_inserted and _lp < _sr_price:
-            _cp_inserted = True
-            _rows_sr += (
-                f'<div style="display:flex;justify-content:space-between;align-items:center;'
-                f'padding:8px 12px;background:#C8A96E12;border-radius:6px;margin:5px 0;">'
-                f'<span style="font-size:12px;font-weight:700;color:#C8A96E;">◆ CURRENT PRICE</span>'
-                f'<span style="font-size:15px;font-weight:900;color:#C8A96E;">{currency}{_sr_price:,.2f}</span>'
-                f'<span style="font-size:11px;color:#C8A96E88;">NOW</span>'
-                f'</div>'
-            )
-        _color = "#E05F5F" if _lt == "resistance" else "#2DD4A0" if _lt == "support" else "#C8A96E"
-        _lbl   = "התנגדות" if _lt == "resistance" else "תמיכה" if _lt == "support" else "—"
-        _rows_sr += (
-            f'<div style="display:flex;justify-content:space-between;align-items:center;'
-            f'padding:5px 4px;border-bottom:1px solid #16162a;">'
-            f'<div style="display:flex;align-items:center;gap:8px;min-width:0;">'
-            f'<span style="color:{_color};font-size:9px;">●</span>'
-            f'<span style="font-size:13px;color:#EDE8E0;white-space:nowrap;">{_ln}</span>'
-            f'<span style="font-size:10px;color:#6E6E92;background:#14142a;border-radius:4px;'
-            f'padding:1px 6px;white-space:nowrap;">{_lg}</span>'
-            f'</div>'
-            f'<div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">'
-            f'<span style="font-size:15px;font-weight:700;color:{_color};">{currency}{_lp:,.2f}</span>'
-            f'<span style="font-size:11px;color:{_color};min-width:56px;text-align:right;">{_lbl}</span>'
-            f'</div>'
-            f'</div>'
-        )
-    if not _cp_inserted:
-        _rows_sr = (
-            f'<div style="display:flex;justify-content:space-between;align-items:center;'
-            f'padding:8px 12px;background:#C8A96E12;border-radius:6px;margin:0 0 6px 0;">'
-            f'<span style="font-size:12px;font-weight:700;color:#C8A96E;">◆ CURRENT PRICE</span>'
-            f'<span style="font-size:15px;font-weight:900;color:#C8A96E;">{currency}{_sr_price:,.2f}</span>'
-            f'<span style="font-size:11px;color:#C8A96E88;">NOW</span>'
-            f'</div>'
-        ) + _rows_sr
-    st.markdown(
-        f'<div style="background:#10101e;border:1px solid #2a2a48;border-radius:12px;'
-        f'padding:18px 22px;margin:12px 0 16px 0;">'
-        f'<div style="font-size:11px;font-weight:700;color:#C8A96E;letter-spacing:2px;'
-        f'text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;'
-        f'border-bottom:1px solid #2a2a48;">Support &amp; Resistance — 10 מדדים</div>'
-        f'{_rows_sr}'
-        f'</div>',
-        unsafe_allow_html=True
-    )
 
 # ─── Footer (Phase 6) ─────────────────────────────────────────────────────────
 _updated = datetime.now().strftime("%H:%M:%S")
