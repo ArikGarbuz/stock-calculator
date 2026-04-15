@@ -1890,7 +1890,7 @@ if _sr_levels_chart:
         fig_mini.add_hline(y=_rl["price"], line_color="#E05F5F", line_width=0.8,
                            line_dash="dot", opacity=0.45, row=1, col=1)
     for _sl in _sup_lines:
-        fig_mini.add_hline(y=_sl["price"], line_color="#2DD4A0", line_width=0.8",
+        fig_mini.add_hline(y=_sl["price"], line_color="#2DD4A0", line_width=0.8,
                            line_dash="dot", opacity=0.45, row=1, col=1)
 
 # ── Layout ────────────────────────────────────────────────────────────────────
