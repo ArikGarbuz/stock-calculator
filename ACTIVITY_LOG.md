@@ -71,6 +71,30 @@
 
 ---
 
+---
+
+## 2026-04-15 — Page Layout Reorganization (v3.3.1 → v3.4 RC)
+
+### מה נעשה
+
+| גרסה | שינוי |
+|------|--------|
+| v3.4 RC | `trade_app.py` | Chart section moved from position 4 (after metrics) to position 6 (bottom of page, before S/R panel) |
+
+### פרטי הארגון המחדש
+
+**סדר עמוד חדש:**
+1. **Metrics** — RSI(14), MACD, data strips (price, high/low, ATR, volume, trends)
+2. **AI Agents** — News Scout, Social Pulse, Sentiment gauge
+3. **Trade Calculator** — Entry/Stop/Target inputs + R:R calculation + GO/NO-GO verdict
+4. **Results** — Income forecast, metric summary, breakdown chart, save to journal
+5. **Chart** — Price chart (5D/1M/3M) with candlestick, SMA-20, volume, S/R lines (moved here ↓)
+6. **Support/Resistance Panel** — 10 metrics: Pivot, Fibonacci, SMA, Bollinger Bands, VWAP, Volume POC
+
+**קבצים שנשתנו:** `trade_app.py` (סדר נושאים, ללא שינוי לוגיקה)
+
+---
+
 ## Next Session — v3.4 (Candidates)
 1. **Risk of Ruin calculator** — `calculators/risk_of_ruin.py`
 2. **Telegram price alerts** — credentials: `C:/Users/arikg/.claude/secrets/telegram_credentials.env`
