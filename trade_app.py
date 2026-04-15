@@ -552,7 +552,7 @@ st.markdown("""
 
 # ─── Session State ────────────────────────────────────────────────────────────
 if "calc_ticker" not in st.session_state:
-    st.session_state["calc_ticker"] = "AAPL"
+    st.session_state["calc_ticker"] = ""
 if "quote" not in st.session_state:
     st.session_state["quote"] = None
 if "df5d" not in st.session_state:
@@ -575,6 +575,8 @@ if "pnl_open" not in st.session_state:
     st.session_state["pnl_open"] = False
 if "last_result" not in st.session_state:
     st.session_state["last_result"] = None
+if "stop_mode" not in st.session_state:
+    st.session_state["stop_mode"] = "⚡ Quick"
 
 # ─── Sidebar ─────────────────────────────────────────────────────────────────
 @st.cache_data(ttl=60)
@@ -904,6 +906,8 @@ if load_btn and ticker_input.strip():
     st.session_state["atr"] = None
     st.session_state["chart_range"] = "5D"
     st.session_state["last_result"] = None
+    st.session_state.pop("stop", None)
+    st.session_state.pop("target", None)
 
 ticker = st.session_state["calc_ticker"]
 
@@ -970,6 +974,17 @@ def _trend_pct(df_close, days):
     past = float(s.iloc[-(days + 1)])
     now  = float(s.iloc[-1])
     return (now - past) / past * 100 if past else None
+
+if not ticker:
+    st.markdown(
+        '<div style="text-align:center;padding:80px 0 40px;">'
+        '<div style="font-size:48px;margin-bottom:16px;">📈</div>'
+        '<div style="font-size:20px;font-weight:700;color:#EDE8E0;margin-bottom:8px;">הכנס סמל מניה כדי להתחיל</div>'
+        '<div style="font-size:14px;color:#6E6E92;">לדוגמה: AAPL, TSLA, TEVA.TA</div>'
+        '</div>',
+        unsafe_allow_html=True
+    )
+    st.stop()
 
 try:
     quote          = _load_quote(ticker)
@@ -1546,16 +1561,41 @@ with _col_c:
 with _col_d:
     commission = st.number_input(f"Commission ({currency})", value=7.0, step=1.0, format="%.0f", key="comm")
 
+_stop_mode_col, _ = st.columns([2, 3])
+with _stop_mode_col:
+    _stop_mode = st.radio(
+        "מצב ברירת מחדל",
+        ["⚡ Quick ($0.20 / $0.40)", "📊 ATR (חכם)"],
+        index=0 if st.session_state["stop_mode"] == "⚡ Quick" else 1,
+        horizontal=True,
+        key="stop_mode_radio",
+        label_visibility="collapsed",
+    )
+    st.session_state["stop_mode"] = "⚡ Quick" if _stop_mode.startswith("⚡") else "📊 ATR"
+
+_quick_stop   = round(float(price) * 0.9995, 2)  # -0.05%
+_quick_target = round(float(price) * 1.002, 2)   # +0.2%
+_atr_stop     = float(suggested_stop)
+_atr_target   = float(agent_target_suggestion) if agent_target_suggestion else round(float(price) * 1.06, 2)
+
+_is_quick     = st.session_state["stop_mode"] == "⚡ Quick"
+_stop_default  = _quick_stop  if _is_quick else _atr_stop
+_target_default = _quick_target if _is_quick else _atr_target
+
 _col_e, _col_f, _col_g = st.columns(3)
 with _col_e:
     entry = st.number_input(f"Entry Price ({currency})", value=float(price), step=0.5, format="%.2f", key="entry")
 with _col_f:
-    stop = st.number_input(f"Stop Loss ({currency})", value=float(suggested_stop), step=0.5, format="%.2f", key="stop")
-    st.markdown(f'<div class="hint">מוצע: {currency}{suggested_stop:.2f} (1.5 × ATR)</div>', unsafe_allow_html=True)
+    stop = st.number_input(f"Stop Loss ({currency})", value=_stop_default, step=0.5, format="%.2f", key="stop")
+    if _is_quick:
+        st.markdown(f'<div class="hint">מחיר כניסה × 0.9995 (−0.05%)</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="hint">מוצע: {currency}{_atr_stop:.2f} (1.5 × ATR)</div>', unsafe_allow_html=True)
 with _col_g:
-    default_target = float(agent_target_suggestion) if agent_target_suggestion else round(float(price) * 1.06, 2)
-    target = st.number_input(f"Target ({currency})", value=default_target, step=0.5, format="%.2f", key="target")
-    if agent_target_suggestion:
+    target = st.number_input(f"Target ({currency})", value=_target_default, step=0.5, format="%.2f", key="target")
+    if _is_quick:
+        st.markdown(f'<div class="hint">מחיר כניסה × 1.002 (+0.2%)</div>', unsafe_allow_html=True)
+    elif agent_target_suggestion:
         st.markdown(f'<div class="hint">נחלץ מחדשות ע"י News Scout</div>', unsafe_allow_html=True)
 
 # Preview row
@@ -1775,9 +1815,19 @@ if calc_btn:
 
             # ── Save to Journal ───────────────────────────────────────────────
             st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
-            save_col, _ = st.columns([1, 3])
-            with save_col:
-                if st.button("💾 Save to Journal", key="save_trade", use_container_width=True):
+            _save_color = "#2DD4A0" if is_go else "#C8A96E"
+            st.markdown(
+                f'<div style="background:#0e0e1c;border:1px solid {_save_color};border-radius:10px;'
+                f'padding:14px 20px;margin:8px 0;display:flex;align-items:center;gap:12px;">'
+                f'<span style="font-size:20px;">💾</span>'
+                f'<span style="font-size:14px;color:#EDE8E0;font-weight:600;">'
+                f'העסקה חושבה — רוצה לשמור ביומן?</span>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+            _save_btn_col, _skip_col = st.columns([3, 1])
+            with _save_btn_col:
+                if st.button("💾 שמור עסקה ביומן", key="save_trade", use_container_width=True, type="primary"):
                     save_trade({
                         "ticker":       ticker,
                         "direction":    direction,
@@ -1794,8 +1844,10 @@ if calc_btn:
                         "news_score":   round(news_score, 2),
                         "social_score": round(social_score, 2),
                     })
-                    st.success("✓ Saved to journal")
+                    st.success("✓ העסקה נשמרה ביומן")
                     st.rerun()
+            with _skip_col:
+                st.button("דלג", key="skip_save", use_container_width=True)
 
             # ── Detailed breakdown ────────────────────────────────────────────
             with st.expander("Full Calculation Breakdown"):

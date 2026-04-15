@@ -48,7 +48,33 @@
 
 ---
 
+---
+
+## 2026-04-15 — Bug Fixes (v3.3 → v3.3.1)
+
+### מה נעשה
+| גרסה | קובץ ראשי | שינוי |
+|------|-----------|-------|
+| v3.3.1 | `trade_app.py` | **Fix #1**: ברירות מחדל Stop/Target שונו מדולרים קבועים לאחוזים (-0.05% / +0.2%); **Fix #2**: hints מעודכנים |
+
+### פרטי התיקונים
+
+**תיקון #1 — ברירות מחדל לפי אחוז (לא דולרים)**
+- **לפני**: `Stop = Price - $0.20`, `Target = Price + $0.40` (קבוע, לא הגיוני לטווחי מחיר שונים)
+- **אחרי**: `Stop = Price × 0.9995` (-0.05%), `Target = Price × 1.002` (+0.2%)
+- **קובצים שנשתנו**: `trade_app.py` (lines 1576-1577)
+
+**תיקון #2 — עדכן hints**
+- **לפני**: "מחיר כניסה − $0.20" / "מחיר כניסה + $0.40"
+- **אחרי**: "מחיר כניסה × 0.9995 (−0.05%)" / "מחיר כניסה × 1.002 (+0.2%)"
+- **קובצים שנשתנו**: `trade_app.py` (lines 1591, 1597)
+
+---
+
 ## Next Session — v3.4 (Candidates)
 1. **Risk of Ruin calculator** — `calculators/risk_of_ruin.py`
 2. **Telegram price alerts** — credentials: `C:/Users/arikg/.claude/secrets/telegram_credentials.env`
 3. **Portfolio tracker** — מעקב על מספר פוזיציות במקביל
+4. **RSI Badge** — RSI indicator badge בפינת המחשבון
+5. **CSV Export** — ייצוא ההיסטוריה ל-CSV
+6. **Auto-Refresh** — רענון אוטומטי של הנתונים

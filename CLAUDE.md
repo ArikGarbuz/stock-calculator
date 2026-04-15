@@ -146,7 +146,7 @@ stock calculator/
 streamlit run trade_app.py
 ```
 
-## גרסה נוכחית: v3.1 (2026-04-03)
+## גרסה נוכחית: v3.3.1 (2026-04-15)
 
 ## תכונות עיקריות (trade_app.py)
 - **Wide layout** — sidebar watchlist + main calculator
@@ -227,3 +227,13 @@ BRAVE_API_KEY=        # brave.com/search/api — חינם, 2000/month
   }
 }
 ```
+
+---
+
+## Roadmap: Supabase Integration (Future)
+- Replace JSON file persistence (`data/user_data.py`) with Supabase PostgreSQL
+- Tables needed: `trades`, `watchlist`, `pnl_snapshots`
+- Will enable: multi-device sync, full history queries, portfolio analytics dashboard
+- Required env vars: `SUPABASE_URL` + `SUPABASE_ANON_KEY` in `.env`
+- Client: `pip install supabase` — replace `save_trade()` / `load_journal()` / `save_pnl_entry()` in `data/user_data.py`
+- Migration: one-time script to import existing `trade_journal.json` → Supabase
