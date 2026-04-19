@@ -88,6 +88,78 @@ def get_company_name(ticker: str) -> str:
         return ticker
 
 
+def get_fundamentals(ticker: str) -> dict:
+    """
+    מחזיר נתונים פונדמנטליים, אנליסטים ושורט של החברה.
+    """
+    try:
+        t = yf.Ticker(ticker)
+        info = t.info
+
+        def _safe(key, transform=None):
+            v = info.get(key)
+            if v is None:
+                return None
+            return transform(v) if transform else v
+
+        market_cap = _safe("marketCap")
+        sector     = info.get("sector") or "—"
+        industry   = info.get("industry") or "—"
+
+        pe_ratio    = _safe("trailingPE",  lambda v: round(float(v), 2))
+        forward_pe  = _safe("forwardPE",   lambda v: round(float(v), 2))
+        peg_ratio   = _safe("pegRatio",    lambda v: round(float(v), 2))
+        debt_equity = _safe("debtToEquity",lambda v: round(float(v), 2))
+        div_yield   = _safe("dividendYield",lambda v: round(float(v) * 100, 2))
+        eps         = _safe("trailingEps", lambda v: round(float(v), 2))
+        profit_margin = _safe("profitMargins", lambda v: round(float(v) * 100, 2))
+        revenue     = _safe("totalRevenue")
+        beta        = _safe("beta",        lambda v: round(float(v), 2))
+
+        target_price  = _safe("targetMeanPrice",         lambda v: round(float(v), 2))
+        target_low    = _safe("targetLowPrice",          lambda v: round(float(v), 2))
+        target_high   = _safe("targetHighPrice",         lambda v: round(float(v), 2))
+        analyst_count = _safe("numberOfAnalystOpinions", int)
+        recommendation = info.get("recommendationKey") or "—"
+
+        short_float = _safe("shortPercentOfFloat", lambda v: round(float(v) * 100, 2))
+        short_ratio = _safe("shortRatio",          lambda v: round(float(v), 2))
+
+        return_52w = _safe("52WeekChange", lambda v: round(float(v) * 100, 2))
+
+        sma50  = _safe("fiftyDayAverage",     lambda v: round(float(v), 2))
+        sma200 = _safe("twoHundredDayAverage",lambda v: round(float(v), 2))
+        current_price = _safe("currentPrice") or _safe("regularMarketPrice")
+
+        return {
+            "market_cap": market_cap,
+            "sector": sector,
+            "industry": industry,
+            "pe_ratio": pe_ratio,
+            "forward_pe": forward_pe,
+            "peg_ratio": peg_ratio,
+            "debt_equity": debt_equity,
+            "div_yield": div_yield,
+            "eps": eps,
+            "profit_margin": profit_margin,
+            "revenue": revenue,
+            "beta": beta,
+            "target_price": target_price,
+            "target_low": target_low,
+            "target_high": target_high,
+            "analyst_count": analyst_count,
+            "recommendation": recommendation,
+            "short_float": short_float,
+            "short_ratio": short_ratio,
+            "return_52w": return_52w,
+            "sma50": sma50,
+            "sma200": sma200,
+            "current_price": current_price,
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
 def is_valid_ticker(ticker: str) -> bool:
     """בודק אם הסמל קיים."""
     try:
