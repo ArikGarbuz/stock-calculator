@@ -1053,7 +1053,6 @@ try:
     company        = get_company_name(ticker)
     mkt            = _load_market_status(ticker)
     _earnings_date = _load_earnings(ticker)
-    fund_data      = _load_fundamentals(ticker)
 except Exception as e:
     st.error(f"Error loading data for **{ticker}**: {e}")
     st.stop()
@@ -1295,7 +1294,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ─── פאנל פונדמנטלי ──────────────────────────────────────────────────────────
+# ─── פאנל פונדמנטלי (lazy — טוען רק בפתיחה) ──────────────────────────────────
 def _fmt_cap(v):
     if v is None: return "—"
     if v >= 1_000_000_000_000: return f"${v/1_000_000_000_000:.2f}T"
@@ -1324,130 +1323,129 @@ def _pct_color(v):
     if v is None: return None
     return "#2DD4A0" if v >= 0 else "#E05F5F"
 
-if fund_data and not fund_data.get("error"):
-    fd = fund_data
+with st.expander("📊 Fundamental Profile — לחץ לפרטים", expanded=False):
+    fund_data = _load_fundamentals(ticker)
+    if not fund_data or fund_data.get("error"):
+        st.caption(f"⚠️ Fundamentals unavailable{': ' + fund_data['error'] if fund_data else ''}")
+    else:
+        fd = fund_data
+        _cp = fd.get("current_price") or price
+        _sma50_dist  = round((_cp - fd["sma50"])  / fd["sma50"]  * 100, 1) if fd.get("sma50")  else None
+        _sma200_dist = round((_cp - fd["sma200"]) / fd["sma200"] * 100, 1) if fd.get("sma200") else None
 
-    # SMA distances
-    _cp = fd.get("current_price") or price
-    _sma50_dist  = round((_cp - fd["sma50"])  / fd["sma50"]  * 100, 1) if fd.get("sma50")  else None
-    _sma200_dist = round((_cp - fd["sma200"]) / fd["sma200"] * 100, 1) if fd.get("sma200") else None
+        def _sma_label(dist):
+            if dist is None: return "—"
+            sign = "+" if dist >= 0 else ""
+            col  = "#2DD4A0" if dist >= 0 else "#E05F5F"
+            arrow = "▲" if dist >= 0 else "▼"
+            return f'<span style="color:{col};">{arrow} {sign}{dist:.1f}%</span>'
 
-    def _sma_label(dist):
-        if dist is None: return "—"
-        sign = "+" if dist >= 0 else ""
-        col  = "#2DD4A0" if dist >= 0 else "#E05F5F"
-        arrow = "▲" if dist >= 0 else "▼"
-        return f'<span style="color:{col};">{arrow} {sign}{dist:.1f}%</span>'
+        _rec_map = {
+            "strongbuy": ("Strong Buy", "#2DD4A0"),
+            "buy":       ("Buy",        "#2DD4A0"),
+            "hold":      ("Hold",       "#C8A96E"),
+            "sell":      ("Sell",       "#E05F5F"),
+            "strongsell":("Strong Sell","#E05F5F"),
+        }
+        _rec_key = (fd.get("recommendation") or "—").lower().replace(" ", "")
+        _rec_lbl, _rec_color = _rec_map.get(_rec_key, (fd.get("recommendation", "—").title(), "#9090B8"))
 
-    _rec_map = {
-        "strongbuy": ("Strong Buy", "#2DD4A0"),
-        "buy":       ("Buy",        "#2DD4A0"),
-        "hold":      ("Hold",       "#C8A96E"),
-        "sell":      ("Sell",       "#E05F5F"),
-        "strongsell":("Strong Sell","#E05F5F"),
-    }
-    _rec_key = (fd.get("recommendation") or "—").lower().replace(" ", "")
-    _rec_lbl, _rec_color = _rec_map.get(_rec_key, (fd.get("recommendation", "—").title(), "#9090B8"))
+        _target = fd.get("target_price")
+        _tgt_upside = round((_target - _cp) / _cp * 100, 1) if _target and _cp else None
+        _tgt_color  = _pct_color(_tgt_upside)
+        _tgt_sign   = "+" if (_tgt_upside or 0) >= 0 else ""
+        _tgt_sub    = f'{_tgt_sign}{_tgt_upside:.1f}% upside' if _tgt_upside is not None else ""
 
-    _target = fd.get("target_price")
-    _tgt_upside = round((_target - _cp) / _cp * 100, 1) if _target and _cp else None
-    _tgt_color  = _pct_color(_tgt_upside)
-    _tgt_sign   = "+" if (_tgt_upside or 0) >= 0 else ""
-    _tgt_sub    = f'{_tgt_sign}{_tgt_upside:.1f}% upside' if _tgt_upside is not None else ""
+        _sf = fd.get("short_float")
+        _sf_color = "#E05F5F" if (_sf or 0) >= 15 else "#C8A96E" if (_sf or 0) >= 7 else "#9090B8"
 
-    _sf = fd.get("short_float")
-    _sf_color = "#E05F5F" if (_sf or 0) >= 15 else "#C8A96E" if (_sf or 0) >= 7 else "#9090B8"
+        _ret52 = fd.get("return_52w")
+        _r52_color = _pct_color(_ret52)
+        _r52_sign  = "+" if (_ret52 or 0) >= 0 else ""
 
-    _ret52 = fd.get("return_52w")
-    _r52_color = _pct_color(_ret52)
-    _r52_sign  = "+" if (_ret52 or 0) >= 0 else ""
+        _beta = fd.get("beta")
+        _beta_color = "#E05F5F" if (_beta or 0) >= 1.5 else "#C8A96E" if (_beta or 0) >= 1.0 else "#2DD4A0"
 
-    _beta = fd.get("beta")
-    _beta_color = "#E05F5F" if (_beta or 0) >= 1.5 else "#C8A96E" if (_beta or 0) >= 1.0 else "#2DD4A0"
+        _pm = fd.get("profit_margin")
 
-    _pm = fd.get("profit_margin")
+        _cells_market = (
+            _fund_cell("Market Cap",  _fmt_cap(fd.get("market_cap")))
+            + _fund_cell("Sector",    fd.get("sector","—"))
+            + _fund_cell("Industry",  fd.get("industry","—"), color="#9090B8")
+            + _fund_cell("Beta",      f'{_beta:.2f}' if _beta else "—", color=_beta_color)
+        )
+        _cells_valuation = (
+            _fund_cell("P/E (Trail.)", f'{fd["pe_ratio"]:.1f}' if fd.get("pe_ratio") else "—")
+            + _fund_cell("P/E (Fwd.)", f'{fd["forward_pe"]:.1f}' if fd.get("forward_pe") else "—")
+            + _fund_cell("PEG",        f'{fd["peg_ratio"]:.2f}' if fd.get("peg_ratio") else "—",
+                         sub="< 1 = undervalued")
+            + _fund_cell("EPS",        f'{currency}{fd["eps"]:.2f}' if fd.get("eps") else "—")
+        )
+        _cells_financial = (
+            _fund_cell("Debt / Equity", f'{fd["debt_equity"]:.1f}' if fd.get("debt_equity") else "—",
+                       color="#E05F5F" if (fd.get("debt_equity") or 0) > 200 else None)
+            + _fund_cell("Profit Margin", f'{_pm:.1f}%' if _pm is not None else "—",
+                         color="#2DD4A0" if (_pm or 0) >= 15 else "#C8A96E" if (_pm or 0) >= 0 else "#E05F5F")
+            + _fund_cell("Revenue",      _fmt_rev(fd.get("revenue")))
+            + _fund_cell("Dividend",     f'{fd["div_yield"]:.2f}%' if fd.get("div_yield") else "—")
+        )
+        _cells_technical = (
+            f'<div class="fund-cell"><div class="fund-label">SMA 50</div>'
+            f'<div class="fund-value">{currency}{fd["sma50"]:,.2f}</div>'
+            f'<div class="fund-sub">{_sma_label(_sma50_dist)}</div></div>'
+            + f'<div class="fund-cell"><div class="fund-label">SMA 200</div>'
+            f'<div class="fund-value">{currency}{fd["sma200"]:,.2f}</div>'
+            f'<div class="fund-sub">{_sma_label(_sma200_dist)}</div></div>'
+            if fd.get("sma50") and fd.get("sma200") else ""
+        ) + (
+            _fund_cell("52W Return", f'{_r52_sign}{_ret52:.1f}%' if _ret52 is not None else "—",
+                       color=_r52_color)
+        )
+        _cells_analyst = (
+            f'<div class="fund-cell"><div class="fund-label">Analyst Target</div>'
+            f'<div class="fund-value" style="color:{_tgt_color or "#EDE8E0"};">'
+            f'{currency}{_target:,.2f}</div>'
+            f'<div class="fund-sub">{_tgt_sub}</div></div>'
+            if _target else _fund_cell("Analyst Target", "—")
+        ) + (
+            f'<div class="fund-cell"><div class="fund-label">Target Range</div>'
+            f'<div class="fund-value" style="font-size:13px;">'
+            f'{currency}{fd["target_low"]:,.2f} – {currency}{fd["target_high"]:,.2f}</div></div>'
+            if fd.get("target_low") and fd.get("target_high") else ""
+        ) + (
+            f'<div class="fund-cell"><div class="fund-label">Recommendation</div>'
+            f'<div class="fund-value" style="color:{_rec_color};">{_rec_lbl}</div>'
+            f'<div class="fund-sub">{fd.get("analyst_count","—")} analysts</div></div>'
+        )
+        _cells_short = (
+            _fund_cell("Short Float",
+                       f'{_sf:.1f}%' if _sf is not None else "—",
+                       sub="High: squeeze risk" if (_sf or 0) >= 15 else "",
+                       color=_sf_color)
+            + _fund_cell("Short Ratio",
+                         f'{fd["short_ratio"]:.1f}d' if fd.get("short_ratio") else "—",
+                         sub="days to cover")
+        )
 
-    _cells_market = (
-        _fund_cell("Market Cap",  _fmt_cap(fd.get("market_cap")))
-        + _fund_cell("Sector",    fd.get("sector","—"))
-        + _fund_cell("Industry",  fd.get("industry","—"), color="#9090B8")
-        + _fund_cell("Beta",      f'{_beta:.2f}' if _beta else "—", color=_beta_color)
-    )
-    _cells_valuation = (
-        _fund_cell("P/E (Trail.)", f'{fd["pe_ratio"]:.1f}' if fd.get("pe_ratio") else "—")
-        + _fund_cell("P/E (Fwd.)", f'{fd["forward_pe"]:.1f}' if fd.get("forward_pe") else "—")
-        + _fund_cell("PEG",        f'{fd["peg_ratio"]:.2f}' if fd.get("peg_ratio") else "—",
-                     sub="< 1 = undervalued")
-        + _fund_cell("EPS",        f'{currency}{fd["eps"]:.2f}' if fd.get("eps") else "—")
-    )
-    _cells_financial = (
-        _fund_cell("Debt / Equity", f'{fd["debt_equity"]:.1f}' if fd.get("debt_equity") else "—",
-                   color="#E05F5F" if (fd.get("debt_equity") or 0) > 200 else None)
-        + _fund_cell("Profit Margin", f'{_pm:.1f}%' if _pm is not None else "—",
-                     color="#2DD4A0" if (_pm or 0) >= 15 else "#C8A96E" if (_pm or 0) >= 0 else "#E05F5F")
-        + _fund_cell("Revenue",      _fmt_rev(fd.get("revenue")))
-        + _fund_cell("Dividend",     f'{fd["div_yield"]:.2f}%' if fd.get("div_yield") else "—")
-    )
-    _cells_technical = (
-        f'<div class="fund-cell"><div class="fund-label">SMA 50</div>'
-        f'<div class="fund-value">{currency}{fd["sma50"]:,.2f}</div>'
-        f'<div class="fund-sub">{_sma_label(_sma50_dist)}</div></div>'
-        + f'<div class="fund-cell"><div class="fund-label">SMA 200</div>'
-        f'<div class="fund-value">{currency}{fd["sma200"]:,.2f}</div>'
-        f'<div class="fund-sub">{_sma_label(_sma200_dist)}</div></div>'
-        if fd.get("sma50") and fd.get("sma200") else ""
-    ) + (
-        _fund_cell("52W Return", f'{_r52_sign}{_ret52:.1f}%' if _ret52 is not None else "—",
-                   color=_r52_color)
-    )
-    _cells_analyst = (
-        f'<div class="fund-cell"><div class="fund-label">Analyst Target</div>'
-        f'<div class="fund-value" style="color:{_tgt_color or "#EDE8E0"};">'
-        f'{currency}{_target:,.2f}</div>'
-        f'<div class="fund-sub">{_tgt_sub}</div></div>'
-        if _target else _fund_cell("Analyst Target", "—")
-    ) + (
-        f'<div class="fund-cell"><div class="fund-label">Target Range</div>'
-        f'<div class="fund-value" style="font-size:13px;">'
-        f'{currency}{fd["target_low"]:,.2f} – {currency}{fd["target_high"]:,.2f}</div></div>'
-        if fd.get("target_low") and fd.get("target_high") else ""
-    ) + (
-        f'<div class="fund-cell"><div class="fund-label">Recommendation</div>'
-        f'<div class="fund-value" style="color:{_rec_color};">{_rec_lbl}</div>'
-        f'<div class="fund-sub">{fd.get("analyst_count","—")} analysts</div></div>'
-    )
-    _cells_short = (
-        _fund_cell("Short Float",
-                   f'{_sf:.1f}%' if _sf is not None else "—",
-                   sub="High: squeeze risk" if (_sf or 0) >= 15 else "",
-                   color=_sf_color)
-        + _fund_cell("Short Ratio",
-                     f'{fd["short_ratio"]:.1f}d' if fd.get("short_ratio") else "—",
-                     sub="days to cover")
-    )
-
-    st.markdown(
-        f'<div class="fund-panel">'
-        f'<div class="fund-panel-title">📊 Fundamental Profile — {company}</div>'
-        f'<div class="fund-grid">'
-        f'<div class="fund-group-title">Market Data</div>'
-        f'{_cells_market}'
-        f'<div class="fund-group-title">Valuation</div>'
-        f'{_cells_valuation}'
-        f'<div class="fund-group-title">Financial Health</div>'
-        f'{_cells_financial}'
-        f'<div class="fund-group-title">Technical Levels</div>'
-        f'{_cells_technical}'
-        f'<div class="fund-group-title">Analyst Consensus</div>'
-        f'{_cells_analyst}'
-        f'<div class="fund-group-title">Short Interest</div>'
-        f'{_cells_short}'
-        f'</div>'
-        f'</div>',
-        unsafe_allow_html=True
-    )
-elif fund_data and fund_data.get("error"):
-    st.caption(f"⚠️ Fundamentals unavailable: {fund_data['error']}")
+        st.markdown(
+            f'<div class="fund-panel">'
+            f'<div class="fund-grid">'
+            f'<div class="fund-group-title">Market Data</div>'
+            f'{_cells_market}'
+            f'<div class="fund-group-title">Valuation</div>'
+            f'{_cells_valuation}'
+            f'<div class="fund-group-title">Financial Health</div>'
+            f'{_cells_financial}'
+            f'<div class="fund-group-title">Technical Levels</div>'
+            f'{_cells_technical}'
+            f'<div class="fund-group-title">Analyst Consensus</div>'
+            f'{_cells_analyst}'
+            f'<div class="fund-group-title">Short Interest</div>'
+            f'{_cells_short}'
+            f'</div>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ─── סוכני בינה מלאכותית ─────────────────────────────────────────────────────
