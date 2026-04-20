@@ -1,6 +1,7 @@
 """
 market_data.py — yfinance wrapper לנתוני שוק
 תומך במניות ארה"ב (AAPL) ובורסת תל אביב (TEVA.TA)
+v3.6: added get_fundamentals()
 """
 import yfinance as yf
 import pandas as pd
